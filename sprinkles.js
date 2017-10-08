@@ -64,7 +64,7 @@ const player = {
 	colors: {
 		blue: '#0BF',
 		green: '#0F2',
-		red: '#F00',
+		red: ['#F00','#A00'],
 		gloom: '#222',
 		powersky: '#228',
 		slowsky: '#242'
@@ -88,10 +88,6 @@ const player = {
 		width: 0
 	},
 	barAdjust: function() {
-		if (Math.abs(player.health / 10 - player.healthbar.width) > 0.99) {
-			(player.healthbar.width < player.health / 10) ? player.healthbar.width++ : player.healthbar.width--;
-		}
-
 		if (player.slowmotion) {
 			if (player.powermode) {
 				player.slowmotion = false;
@@ -127,6 +123,10 @@ const player = {
 				player.powerbar.width = player.powerlevel;
 			}
 		}
+
+		if (Math.abs(player.health / 10 - player.healthbar.width) > 0.99) {
+			(player.healthbar.width < player.health / 10) ? player.healthbar.width++ : player.healthbar.width--;
+		}
 	},
 	barDraw: function() {
 		player.barAdjust();
@@ -134,8 +134,14 @@ const player = {
 		game.context.fillRect(player.powerbar.x, player.powerbar.y, player.powerbar.width, player.powerbar.height);
 		game.context.fillStyle = player.colors.green;
 		game.context.fillRect(player.slowbar.x, player.slowbar.y, player.slowbar.width, player.slowbar.height);
-		game.context.fillStyle = player.colors.red;
-		game.context.fillRect(player.healthbar.x, player.healthbar.y, player.healthbar.width, player.healthbar.height);
+		game.context.fillStyle = player.colors.red[0];
+		if (player.healthbar.width < 240) {
+			game.context.fillRect(player.healthbar.x, player.healthbar.y, player.healthbar.width, player.healthbar.height);
+		} else {
+			game.context.fillRect(player.healthbar.x, player.healthbar.y, 240, player.healthbar.height);
+			game.context.fillStyle = player.colors.red[1];
+			game.context.fillRect(player.healthbar.x, player.healthbar.y, Math.abs(player.healthbar.width - 240), player.healthbar.height);
+		}
 	},
 	safeCheck: function() {
 		if (player.y + player.height < game.cloudThickness) {
@@ -220,8 +226,8 @@ const player = {
 						return false;
 					} else {
 						player.healthcounter.innerHTML = player.health;
+						player.y += 20;
 					}
-					player.y += 20;
 				}
 				return true;
 			}
