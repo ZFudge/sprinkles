@@ -1,0 +1,23 @@
+<!doctype html>
+
+<head>
+	<title>Sprinkles</title>
+  	<link rel="shortcut icon" type="image/x-icon" href="sprinkles.ico">
+</head>
+
+<body onload="sounds.theme.play()">
+	<canvas id='canv' height='550px' width='250px'></canvas>
+
+	<div id='scoreContainer' style='display:inline;  position:absolute;'>
+		<div id='pointcontainer'>
+			<div>Points</div>
+			<div id='points' value='0'>0</div>
+		</div>
+		<div id='healthcontainer'>
+			<div>Health</div>
+			<div id='health' value='0'>0</div>
+		</div>
+	</div>
+
+	<script src='sprinkles.js'></script>
+</body>
