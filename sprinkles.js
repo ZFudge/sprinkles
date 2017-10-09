@@ -20,7 +20,7 @@ function sprinkling() {
 	game.context.fillStyle = "black";
 	game.context.fillRect(0, 0, game.canvas.width, game.canvas.height);
 
-	(player.powermode) ? game.context.fillStyle = player.colors.powersky : (player.slowmotion) ? game.context.fillStyle = player.colors.slowsky : game.context.fillStyle = player.colors.gloom;
+	(player.passivemode) ? game.context.fillStyle = player.colors.passivesky : (player.powermode) ? game.context.fillStyle = player.colors.powersky : (player.slowmotion) ? game.context.fillStyle = player.colors.slowsky : game.context.fillStyle = player.colors.gloom;
 	game.context.fillRect(0, game.cloudThickness, game.canvas.width, game.waterLine);
 
 	let fillIt = '#0000'+ game.waterIntensity.toString();
@@ -48,12 +48,15 @@ const player = {
 	x: (game.canvas.width/2)-5,
 	y: game.canvas.height*0.92,
 	alive: true,
+	passivemode: false,
+	passivelevel: 0,
+	powermode: false,
+	powerlevel: 0,
 	slowmotion: false,
 	slowlevel: 0,
 	health: 0,
-	powermode: false,
-	powerlevel: 0,
 	points: 0,
+	size: 10,
 	width: 10,
 	height: 10,
 	color: "#ccc",
@@ -62,33 +65,60 @@ const player = {
 	fastvertical: 2,
 	speed: 3,
 	colors: {
+		magenta: '#AE00FF',
 		blue: '#0BF',
 		green: '#0F2',
 		red: ['#F11','#C00','#900','#600','#100','#600','#900','#C00','#F11','#F44','#F99','#FFF','#F99','#F44','#F11','#C00','#900','#600','#100','#600','#900','#C00','#F11','#F44','#F99'],
 		gloom: '#3D007A',
+		passivesky: '#5C00BF',
 		powersky: '#228',
 		slowsky: '#242'
 	},
+	passivebar: {
+		x: 5,
+		y: game.canvas.height - 45,
+		height: 10,
+		width: 0
+	},
 	powerbar: {
 		x: game.canvas.width/2,
-		y:game.canvas.height - 30,
-		height:10,
+		y: game.canvas.height - 30,
+		height: 10,
 		width: 0
 	},
 	slowbar: {
-		x:5,
-		y:game.canvas.height - 30,
-		height:10,
+		x: 5,
+		y: game.canvas.height - 30,
+		height: 10,
 		width: 0
 	},
 	healthbar: {
-		x:5,
-		y:game.canvas.height - 15,
-		height:10,
+		x: 5,
+		y: game.canvas.height - 15,
+		height: 10,
 		width: 0
 	},
-	barAdjust: function() {
-		if (player.slowmotion) {
+	adjustBars: function() {
+		if (player.passivemode) {
+			if (player.powermode) player.powermode = false;
+			if (player.slowmotion) player.slowmotion = false;
+			
+			if (player.powerbar.width > player.powerbar.level) {
+				player.powerbar.width -= 0.01;
+			}
+		} else if (player.powermode) {
+			if (player.slowmotion) player.slowmotion = false;
+			if (player.powerlevel > 0) {
+				player.powerlevel -= 0.2;
+				player.powerbar.width = player.powerlevel;
+			} else {
+				player.powermode = false;
+				player.powerlevel = 0;
+				player.powerbar.width = player.powerlevel;
+				player.vertical /= 2;
+				player.fastvertical /= 2;
+			}
+		} else if (player.slowmotion) {
 			if (player.powermode) {
 				player.slowmotion = false;
 			} else {
@@ -110,22 +140,14 @@ const player = {
 				player.powerlevel += 0.05;
 				player.powerbar.width = player.powerlevel;
 			} else {
-				// fourth bar
-			}
-		}
-		if (player.powermode) {
-			if (player.powerlevel > 0) {
-				player.powerlevel -= 0.2;
-				player.powerbar.width = player.powerlevel;
-			} else {
-				player.powermode = false;
-				player.powerlevel = 0;
-				player.powerbar.width = player.powerlevel;
-				player.vertical /= 2;
-				player.fastvertical /= 2;
+				player.passivelevel += 0.025;
+				player.passivebar.width = player.passivelevel;
 			}
 		}
 
+		if (Math.abs(player.passivelevel - player.passivebar.width) > 0.99) {
+			(player.passivebar.width < player.passivelevel / 10) ? player.passivebar.width++ : player.passivebar.width--;
+		}
 		if (Math.abs(player.health / 10 - player.healthbar.width) > 0.99) {
 			(player.healthbar.width < player.health / 10) ? player.healthbar.width++ : player.healthbar.width--;
 		}
@@ -140,13 +162,14 @@ const player = {
 		}
 	},
 	barDraw: function() {
-		player.barAdjust();
+		player.adjustBars();
+		game.context.fillStyle = player.colors.magenta;
+		game.context.fillRect(player.passivebar.x, player.passivebar.y, player.passivebar.width, player.powerbar.height);
 		game.context.fillStyle = player.colors.blue;
 		game.context.fillRect(player.powerbar.x, player.powerbar.y, player.powerbar.width, player.powerbar.height);
 		game.context.fillStyle = player.colors.green;
 		game.context.fillRect(player.slowbar.x, player.slowbar.y, player.slowbar.width, player.slowbar.height);
 		player.healthLayers(player.healthbar.width, 0, 240);
-
 	},
 	safeCheck: function() {
 		if (player.y + player.height < game.cloudThickness) {
@@ -271,6 +294,12 @@ const sprinkles = {
 			for (let obst in sprinkles.obstacles.storage) {
 				game.context.fillRect(sprinkles.obstacles.storage[obst].x,sprinkles.obstacles.storage[obst].y,sprinkles.obstacles.storage[obst].width,sprinkles.obstacles.storage[obst].height);
 			}
+		},
+		checkObjectDraw: function() {
+			if (sprinkles.obstacles.amount > 0) {
+				game.context.fillStyle = 'black';
+				sprinkles.obstacles.drawObstacles();
+			}
 		}
 	},
 	drip: function() {
@@ -278,24 +307,30 @@ const sprinkles = {
 		const hgt = 10 + Math.floor(Math.random() * 10);
 		const spd = 1 + Math.floor(Math.random() * sprinkles.speedrange);
 		sprinkles.drops.push({
-			color:sprinkles.colors[Math.floor(Math.random() * sprinkles.colors.length)],
+			color: sprinkles.colors[Math.floor(Math.random() * sprinkles.colors.length)],
 			width: wth,
 			height: hgt,
-			x:Math.floor(Math.random() * game.canvas.width-wth), 
-			y:0-hgt,
+			x: Math.floor(Math.random() * game.canvas.width-wth), 
+			y: 0-hgt,
 			speed: spd,
 			trueSpeed: spd
 		});
 	},
+	passCheck: function(drop) {
+		if (drop.y < player.y + player.size && drop.x < player.x+player.size+20 && drop.x+drop.width > player.x-20 && drop.y > player.y-100) return true;
+	},
 	adjust: function() {
 		console.log('adjust');
-		if (sprinkles.obstacles.amount > 0) {
-			game.context.fillStyle = 'black';
-			sprinkles.obstacles.drawObstacles();
-		}
+		sprinkles.obstacles.checkObjectDraw();
 		let removals = [];
 		for (let drop in sprinkles.drops) {
 			sprinkles.drops[drop].y += sprinkles.drops[drop].speed;
+			if (player.passivemode) {
+				if (sprinkles.passCheck(sprinkles.drops[drop])) {
+					console.log('in sight');
+					(sprinkles.drops[drop].x > player.x + player.size/2) ? sprinkles.drops[drop].x++ : sprinkles.drops[drop].x--;
+				}
+			}
 			if (sprinkles.drops[drop].y >= game.canvas.height || player.collision(sprinkles.drops[drop])) {
 				let index = sprinkles.drops.indexOf(sprinkles.drops[drop]);
 				//console.log('push '+index + '   x: ' + sprinkles.drops[drop].x + ', y:' + sprinkles.drops[drop].y);
@@ -356,6 +391,13 @@ function pushedKey(btn) {
 		if (btn.keyCode === 39 && player.horizontal < 2) player.horizontal = 2;
 		if (btn.keyCode === 38) player.vertical = player.fastvertical;
 		if (btn.keyCode === 40) player.vertical = 0;
+		if (btn.keyCode === 65 && player.passivelevel >= 50 && !player.passivemode) {
+			player.passivemode = true;
+			player.passivelevel -= 50;
+			setTimeout(function() {
+				player.passivemode = false;
+			}, 4000);
+		}
 		if (btn.keyCode === 67 && player.powerlevel > 0 && player.y < game.waterLine) { // C key
 			player.powermode = !player.powermode;
 			(player.powermode) ? (
