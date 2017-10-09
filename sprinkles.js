@@ -35,10 +35,10 @@ function sprinkling() {
 		if (odds < sprinkles.dripFrequency) {
 			sprinkles.drip();
 		}
-		player.move();
 		player.safeCheck();
 		player.barDraw();
 	}
+	player.move();
 }
 
 
@@ -64,8 +64,8 @@ const player = {
 	colors: {
 		blue: '#0BF',
 		green: '#0F2',
-		red: ['#F00','#A00'],
-		gloom: '#222',
+		red: ['#F11','#C00','#900','#600','#100','#600','#900','#C00','#F11','#F44','#F99','#FFF','#F99','#F44','#F11','#C00','#900','#600','#100','#600','#100','#600','#900'],
+		gloom: '#301530',
 		powersky: '#228',
 		slowsky: '#242'
 	},
@@ -103,29 +103,40 @@ const player = {
 				}
 			}
 		} else if (player.vertical > 0 && player.y < game.waterLine) {
-			if (player.slowlevel < 100) {
+			if (player.slowlevel < 110) {
 				player.slowlevel += 0.1;
 				player.slowbar.width = player.slowlevel;
-			} else if (player.powerlevel < 100) {
-				player.powerlevel += 0.025;
+			} else if (player.powerlevel < 110) {
+				player.powerlevel += 0.05;
 				player.powerbar.width = player.powerlevel;
 			} else {
-
+				// fourth bar
 			}
 		}
-
 		if (player.powermode) {
 			if (player.powerlevel > 0) {
-				player.powerlevel -= 0.1;
+				player.powerlevel -= 0.2;
+				player.powerbar.width = player.powerlevel;
 			} else {
 				player.powermode = false;
 				player.powerlevel = 0;
 				player.powerbar.width = player.powerlevel;
+				player.vertical /= 2;
+				player.fastvertical /= 2;
 			}
 		}
 
 		if (Math.abs(player.health / 10 - player.healthbar.width) > 0.99) {
 			(player.healthbar.width < player.health / 10) ? player.healthbar.width++ : player.healthbar.width--;
+		}
+	},
+	healthLayers: function(width, n, max) {
+		game.context.fillStyle = player.colors.red[n];
+		if (width <= max) {
+			game.context.fillRect(player.healthbar.x, player.healthbar.y, width, player.healthbar.height);
+		} else {
+			game.context.fillRect(player.healthbar.x, player.healthbar.y, max, player.healthbar.height);
+			player.healthLayers(width-max, n+1, max-10);
 		}
 	},
 	barDraw: function() {
@@ -134,14 +145,8 @@ const player = {
 		game.context.fillRect(player.powerbar.x, player.powerbar.y, player.powerbar.width, player.powerbar.height);
 		game.context.fillStyle = player.colors.green;
 		game.context.fillRect(player.slowbar.x, player.slowbar.y, player.slowbar.width, player.slowbar.height);
-		game.context.fillStyle = player.colors.red[0];
-		if (player.healthbar.width < 240) {
-			game.context.fillRect(player.healthbar.x, player.healthbar.y, player.healthbar.width, player.healthbar.height);
-		} else {
-			game.context.fillRect(player.healthbar.x, player.healthbar.y, 240, player.healthbar.height);
-			game.context.fillStyle = player.colors.red[1];
-			game.context.fillRect(player.healthbar.x, player.healthbar.y, Math.abs(player.healthbar.width - 240), player.healthbar.height);
-		}
+		player.healthLayers(player.healthbar.width, 0, 240);
+
 	},
 	safeCheck: function() {
 		if (player.y + player.height < game.cloudThickness) {
@@ -150,9 +155,13 @@ const player = {
 	},
 	levelup: function() {
 		player.health += 100;
-		player.points += 10;
+		player.points += 100;
 		player.y = game.canvas.height*0.9625;
-		if (player.powermode) player.powermode = false;
+		if (player.powermode) {
+			player.powermode = false;
+			player.fastvertical /= 2;
+			player.vertical /= 2;
+		}
 		if (player.slowmotion) {
 			player.slowmotion = false;
 			clearInterval(game.interval);
@@ -165,7 +174,7 @@ const player = {
 		}
 
 		player.pointcounter.innerHTML = player.points;
-		player.healthcounter.innerHTML = player.health;
+		player.healthcounter.innerHTML = Math.round(player.health);
 
 		if (sprinkles.speedrange <= 4.9) sprinkles.speedrange += 0.1;
 		if (sprinkles.dripFrequency < 2.5) sprinkles.dripFrequency += 0.05;
@@ -179,8 +188,8 @@ const player = {
 			player.y -= player.vertical;
 			
 			if (player.powermode) {
-				player.health++;
-				player.healthcounter.innerHTML = player.health;
+				player.health += 0.25;
+				player.healthcounter.innerHTML = Math.round(player.health);
 			}
 			
 			game.context.fillStyle = player.color,
@@ -210,13 +219,12 @@ const player = {
 					|| (dropDwn >= playUp && dropDwn <= playDwn && dropLft >= playLft && dropLft <= playRgt) || (dropDwn >= playUp && dropDwn <= playDwn && dropRgt >= playLft && dropRgt <= playRgt) || (dropUp >= playUp && dropUp <= playDwn && dropLft >= playLft && dropLft <= playRgt)) && dropDwn < game.waterLine && dropDwn > game.cloudThickness) {
 				sounds.soundlooper();
 				if (player.powermode) {
-					player.health += 5;
+					player.health += 2;
 					player.y -= 10;
 					player.health += 10;
-					player.healthcounter.innerHTML = player.health;
-					player.points += 2;
+					player.healthcounter.innerHTML = Math.round(player.health);
+					player.points += 20;
 					player.pointcounter.innerHTML = player.points;
-					player
 				} else {
 					(player.health > 0) ? player.health -= 50 : player.health--;
 					if (player.health < 0) {
@@ -225,7 +233,7 @@ const player = {
 						player.vertical = -3;
 						return false;
 					} else {
-						player.healthcounter.innerHTML = player.health;
+						player.healthcounter.innerHTML = Math.round(player.health);
 						player.y += 20;
 					}
 				}
@@ -342,15 +350,24 @@ const sprinkles = {
 }
 
 function pushedKey(btn) {
-	if (btn.keyCode === 82) {
-		refresh();
-	}
+	if (btn.keyCode === 32) stopAndGo(); // space
+	if (btn.keyCode === 82) refresh();  // R
+	if (btn.keyCode === 84) test(); 	// T
 	if (player.alive) {
 		if (btn.keyCode === 37 && player.horizontal > -2) player.horizontal = -2;
 		if (btn.keyCode === 39 && player.horizontal < 2) player.horizontal = 2;
 		if (btn.keyCode === 38) player.vertical = player.fastvertical;
 		if (btn.keyCode === 40) player.vertical = 0;
-		if (btn.keyCode === 67 && player.powerlevel > 0 && player.y < game.waterLine) player.powermode = !player.powermode; // C key
+		if (btn.keyCode === 67 && player.powerlevel > 0 && player.y < game.waterLine) { // C key
+			player.powermode = !player.powermode;
+			(player.powermode) ? (
+				player.vertical *= 2,
+				player.fastvertical *= 2
+			) : (
+				player.vertical /= 2,
+				player.fastvertical /= 2
+			);
+		}
 		if (btn.keyCode === 83 && player.slowlevel > 0 && player.y < game.waterLine) { // S key
 			player.slowmotion = !player.slowmotion;
 			player.slowmotion ? (
@@ -362,25 +379,14 @@ function pushedKey(btn) {
 			);
 		}	
 	}
-	if (btn.keyCode === 84) {
-		test();
-	}
-	if (btn.keyCode === 32) {
-		stopAndGo();
-	}
 }
 
 function releasedKey(btn) {
 	if (player.alive) {
-		if (btn.keyCode === 38 || btn.keyCode === 40) {
-			player.vertical = 1;
-		}
-		if (btn.keyCode === 37 && player.horizontal < 0) {
-			player.horizontal += 2;
-		}
-		if (btn.keyCode === 39 && player.horizontal > 0) {
-			player.horizontal -= 2;
-		}
+		if (btn.keyCode === 38) player.vertical /= 2; // up
+		if (btn.keyCode === 40) player.vertical = 1; // down
+		if (btn.keyCode === 37 && player.horizontal < 0) player.horizontal += 2;
+		if (btn.keyCode === 39 && player.horizontal > 0) player.horizontal -= 2;
 	}
 }
 
