@@ -139,9 +139,11 @@ const player = {
 			} else if (player.powerlevel < 120) {
 				player.powerlevel += 0.05;
 				player.powerbar.width = player.powerlevel;
-			} else {
+			} else if (Math.abs(player.passivelevel - 240) > 0.025) {
 				player.passivelevel += 0.025;
 				player.passivebar.width = player.passivelevel;
+			} else {
+				sprinkles.dripFrequency -= 0.0002;
 			}
 		}
 
