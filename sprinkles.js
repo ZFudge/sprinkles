@@ -38,7 +38,7 @@ function sprinkling() {
 		player.safeCheck();
 		player.barDraw();
 	}
-	player.move();
+	player.adjust();
 }
 
 
@@ -46,7 +46,7 @@ const player = {
 	pointcounter: document.getElementById('points'),
 	healthcounter: document.getElementById('health'),
 	x: (game.canvas.width/2)-5,
-	y: game.canvas.height*0.9625,
+	y: game.canvas.height*0.92,
 	alive: true,
 	slowmotion: false,
 	slowlevel: 0,
@@ -54,7 +54,7 @@ const player = {
 	powermode: false,
 	powerlevel: 0,
 	points: 0,
-	width: 10, //40
+	width: 10,
 	height: 10,
 	color: "#ccc",
 	horizontal: 0,
@@ -64,14 +64,14 @@ const player = {
 	colors: {
 		blue: '#0BF',
 		green: '#0F2',
-		red: ['#F11','#C00','#900','#600','#100','#600','#900','#C00','#F11','#F44','#F99','#FFF','#F99','#F44','#F11','#C00','#900','#600','#100','#600','#100','#600','#900'],
-		gloom: '#301530',
+		red: ['#F11','#C00','#900','#600','#100','#600','#900','#C00','#F11','#F44','#F99','#FFF','#F99','#F44','#F11','#C00','#900','#600','#100','#600','#900','#C00','#F11','#F44','#F99'],
+		gloom: '#3D007A',
 		powersky: '#228',
 		slowsky: '#242'
 	},
 	powerbar: {
-		x:5,
-		y:game.canvas.height - 45,
+		x: game.canvas.width/2,
+		y:game.canvas.height - 30,
 		height:10,
 		width: 0
 	},
@@ -103,10 +103,10 @@ const player = {
 				}
 			}
 		} else if (player.vertical > 0 && player.y < game.waterLine) {
-			if (player.slowlevel < 110) {
+			if (player.slowlevel < 120) {
 				player.slowlevel += 0.1;
 				player.slowbar.width = player.slowlevel;
-			} else if (player.powerlevel < 110) {
+			} else if (player.powerlevel < 120) {
 				player.powerlevel += 0.05;
 				player.powerbar.width = player.powerlevel;
 			} else {
@@ -156,7 +156,7 @@ const player = {
 	levelup: function() {
 		player.health += 100;
 		player.points += 100;
-		player.y = game.canvas.height*0.9625;
+		player.y = game.canvas.height*0.92;
 		if (player.powermode) {
 			player.powermode = false;
 			player.fastvertical /= 2;
@@ -179,11 +179,9 @@ const player = {
 		if (sprinkles.speedrange <= 4.9) sprinkles.speedrange += 0.1;
 		if (sprinkles.dripFrequency < 2.5) sprinkles.dripFrequency += 0.05;
 	},
-	move: function() {
+	adjust: function() {
 		if (player.alive) {
-			if (player.horizontal < 0 && player.x < 1 || player.horizontal > 0 && player.x > game.canvas.width - player.width) {
-				player.horizontal = 0;
-			}
+			if (player.horizontal < 0 && player.x < 1 || player.horizontal > 0 && player.x > game.canvas.width - player.width) player.horizontal = 0;
 			player.x += player.horizontal;
 			player.y -= player.vertical;
 			
@@ -405,7 +403,7 @@ function refresh() {
 	player.points = 0;
 	player.health = 0;
 	player.x = (game.canvas.width/2)-5;
-	player.y = game.canvas.height*0.9625;
+	player.y = game.canvas.height*0.92;
 	player.horizontal = 0;
 	player.vertical = 1;
 	player.speed = 3;
