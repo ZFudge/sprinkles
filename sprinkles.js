@@ -2,28 +2,29 @@ document.addEventListener("keydown",pushedKey);
 document.addEventListener("keyup",releasedKey);
 
 const game = {
+	active: true,
 	canvas: document.getElementById('canv'),
 	speed: 20, // milliseconds in each interval
-	waterIntensity: 40, // sets shade of blue
+	waterShade: 40, // sets shade of blue
 	waterRise: true,
-	waterFlex: function() {
-		(game.waterRise) ? game.waterIntensity++ : game.waterIntensity--;
-		if (game.waterIntensity >= 88 || game.waterIntensity <= 40) game.waterRise = !game.waterRise;
+	waterAdjust: function() { //
+		(game.waterRise) ? game.waterShade++ : game.waterShade--;
+		if (game.waterShade >= 88 || game.waterShade <= 40) game.waterRise = !game.waterRise;
 	},
 	refresh: function() {
 		sprinkles.drops = [];
-		sprinkles.active = true;
+		game.active = true;
 		sprinkles.speedrange = 1;
-		sprinkles.dripFrequency = 0.7;
+		sprinkles.dripFrequency = 0.07;
 		sprinkles.obstacles.amount = 0;
 		sprinkles.obstacles.storage = [];
 	
 		player.pointcounter.innerHTML = 0;
-		player.healthcounter.innerHTML = 0;
-		player.healthbar.width = player.slow.width = player.power.width = player.passive.width = 0;
+		player.health.counter.innerHTML = 0;
+		player.health.width = player.slow.width = player.power.width = player.passive.width = 0;
 		player.alive = true;
 		player.points = 0;
-		player.health = 0;
+		player.health.level = 0;
 		player.x = (game.canvas.width/2)-5;
 		player.y = game.canvas.height*0.92;
 		player.horizontal = 0;
@@ -31,8 +32,8 @@ const game = {
 		player.speed = 3;
 	},
 	stopAndGo: function() {
-		(sprinkles.active) ? clearInterval(game.interval) : game.interval = setInterval(sprinkling,game.speed);
-		sprinkles.active = !sprinkles.active;
+		(game.active) ? clearInterval(game.interval) : game.interval = setInterval(sprinkling,game.speed);
+		game.active = !game.active;
 	}
 }
 game.context = game.canvas.getContext('2d');
@@ -44,47 +45,38 @@ function sprinkling() {
 	game.context.fillStyle = "black";
 	game.context.fillRect(0, 0, game.canvas.width, game.canvas.height);
 
-	(player.passivemode) ? game.context.fillStyle = player.colors.passivesky : (player.powermode) ? game.context.fillStyle = player.colors.powersky : (player.slowmotion) ? game.context.fillStyle = player.colors.slowsky : game.context.fillStyle = player.colors.gloom;
+	(player.passive.on) ? game.context.fillStyle = player.colors.passivesky : (player.power.on) ? game.context.fillStyle = player.colors.powersky : (player.slow.on) ? game.context.fillStyle = player.colors.slowsky : game.context.fillStyle = player.colors.gloom;
 	game.context.fillRect(0, game.cloudThickness, game.canvas.width, game.waterLine);
 
-	let fillIt = '#0000'+ game.waterIntensity.toString();
+	let fillIt = '#0000'+ game.waterShade.toString();
 	game.context.fillStyle = fillIt;
 	game.context.fillRect(0, game.waterLine, game.canvas.width, game.canvas.height);
-	game.waterFlex();
+	game.waterAdjust();
 
 	sprinkles.adjust();
 
 	if (player.alive) {
-		let odds = Math.random() * 10;
-		if (odds < sprinkles.dripFrequency) {
-			sprinkles.drip();
-		}
+		let odds = Math.random();
+		if (odds < sprinkles.dripFrequency) sprinkles.drip();
+
 		player.safeCheck();
 		player.barDraw();
 	}
 	player.adjust();
 }
 
-
 const player = {
-	pointcounter: document.getElementById('points'),
-	healthcounter: document.getElementById('health'),
+	size: 10,
 	x: (game.canvas.width/2)-5,
 	y: game.canvas.height*0.92,
-	alive: true,
-	passivemode: false,
-	powermode: false,
-	slowmotion: false,
-	health: 0,
-	points: 0,
-	size: 10,
-	width: 10,
-	height: 10,
-	color: "#ccc",
 	horizontal: 0,
 	vertical: 1,
 	fastvertical: 2,
 	speed: 3,
+	alive: true,
+	pointcounter: document.getElementById('points'),
+	points: 0,
+	color: "#ccc",
 	colors: {
 		magenta: '#AE00FF',
 		blue: '#0BF',
@@ -96,6 +88,7 @@ const player = {
 		slowsky: '#242'
 	},
 	passive: {
+		on: false,
 		level: 0,
 		x: 5,
 		y: game.canvas.height - 45,
@@ -103,6 +96,7 @@ const player = {
 		width: 0
 	},
 	power: {
+		on: false,
 		level: 0,
 		x: game.canvas.width/2,
 		y: game.canvas.height - 30,
@@ -110,48 +104,60 @@ const player = {
 		width: 0
 	},
 	slow: {
+		on: false,
 		level: 0,
 		x: 5,
 		y: game.canvas.height - 30,
 		height: 10,
 		width: 0
 	},
-	healthbar: {
+	health: {
+		level: 0,
 		x: 5,
 		y: game.canvas.height - 15,
 		height: 10,
-		width: 0
+		width: 0,
+		counter: document.getElementById('health'),
+		drawLayers: function(width, n, max) {
+			game.context.fillStyle = player.colors.red[n];
+			if (width <= max) {
+				game.context.fillRect(player.health.x, player.health.y, width, player.health.height);
+			} else {
+				game.context.fillRect(player.health.x, player.health.y, max, player.health.height);
+				player.health.drawLayers(width-max, n+1, max-10);
+			}
+		}
 	},
 	adjustBars: function() {
-		if (player.passivemode) {
-			if (player.powermode) player.powermode = false;
-			if (player.slowmotion) player.slowmotion = false;
+		if (player.passive.on) {
+			if (player.power.on) player.power.on = false;
+			if (player.slow.on) player.slow.on = false;
 			
 			if (player.power.width > player.power.level) {
 				player.power.width -= 0.01;
 				player.power.width = player.power.width.toFixed(0);
 			}
-		} else if (player.powermode) {
-			if (player.slowmotion) player.slowmotion = false;
+		} else if (player.power.on) {
+			if (player.slow.on) player.slow.on = false;
 			if (player.power.level > 0) {
 				player.power.level -= 0.2;
 				player.power.width = player.power.level.toFixed(0);
 			} else {
-				player.powermode = false;
+				player.power.on = false;
 				player.power.level = 0;
 				player.power.width = player.power.level.toFixed(0);
 				player.vertical /= 2;
 				player.fastvertical /= 2;
 			}
-		} else if (player.slowmotion) {
-			if (player.powermode) {
-				player.slowmotion = false;
+		} else if (player.slow.on) {
+			if (player.power.on) {
+				player.slow.on = false;
 			} else {
 				if (player.slow.level > 0) {
 					player.slow.level -= 0.5;
 					player.slow.width = player.slow.level.toFixed(0);
 				} else {
-					player.slowmotion = false;
+					player.slow.on = false;
 					player.slow.level = 0;
 					clearInterval(game.interval);
 					game.interval = setInterval(sprinkling,game.speed);
@@ -168,24 +174,15 @@ const player = {
 				player.passive.level += 0.025;
 				player.passive.width = player.passive.level.toFixed(0);
 			} else {
-				sprinkles.dripFrequency -= 0.0002;
+				sprinkles.dripFrequency -= 0.00002;
 			}
 		}
 
 		if (Math.abs(player.passive.level - player.passive.width) > 0.99) {
 			(player.passive.width < player.passive.level / 10) ? player.passive.width++ : player.passive.width--;
 		}
-		if (Math.abs(player.health / 10 - player.healthbar.width) > 0.99) {
-			(player.healthbar.width < player.health / 10) ? player.healthbar.width++ : player.healthbar.width--;
-		}
-	},
-	healthLayers: function(width, n, max) {
-		game.context.fillStyle = player.colors.red[n];
-		if (width <= max) {
-			game.context.fillRect(player.healthbar.x, player.healthbar.y, width, player.healthbar.height);
-		} else {
-			game.context.fillRect(player.healthbar.x, player.healthbar.y, max, player.healthbar.height);
-			player.healthLayers(width-max, n+1, max-10);
+		if (Math.abs(player.health.level / 10 - player.health.width) > 0.99) {
+			(player.health.width < player.health.level / 10) ? player.health.width++ : player.health.width--;
 		}
 	},
 	barDraw: function() {
@@ -196,24 +193,24 @@ const player = {
 		game.context.fillRect(player.power.x, player.power.y, player.power.width, player.power.height);
 		game.context.fillStyle = player.colors.green;
 		game.context.fillRect(player.slow.x, player.slow.y, player.slow.width, player.slow.height);
-		player.healthLayers(player.healthbar.width, 0, 240);
+		player.health.drawLayers(player.health.width, 0, 240);
 	},
 	safeCheck: function() {
-		if (player.y + player.height < game.cloudThickness) {
+		if (player.y + player.size < game.cloudThickness) {
 			player.levelup();
 		}
 	},
 	levelup: function() {
-		player.health += 100;
+		player.health.level += 100;
 		player.points += 100;
 		player.y = game.canvas.height*0.92;
-		if (player.powermode) {
-			player.powermode = false;
+		if (player.power.on) {
+			player.power.on = false;
 			player.fastvertical /= 2;
 			player.vertical /= 2;
 		}
-		if (player.slowmotion) {
-			player.slowmotion = false;
+		if (player.slow.on) {
+			player.slow.on = false;
 			clearInterval(game.interval);
 			game.interval = setInterval(sprinkling,game.speed);
 		}
@@ -224,33 +221,33 @@ const player = {
 		}
 
 		player.pointcounter.innerHTML = player.points;
-		player.healthcounter.innerHTML = Math.round(player.health);
+		player.health.counter.innerHTML = Math.round(player.health.level);
 
 		if (sprinkles.speedrange <= 4.9) sprinkles.speedrange += 0.1;
-		if (sprinkles.dripFrequency < 2.5) sprinkles.dripFrequency += 0.05;
+		if (sprinkles.dripFrequency < .25) sprinkles.dripFrequency += 0.005;
 	},
 	adjust: function() {
 		if (player.alive) {
-			if (player.horizontal < 0 && player.x < 1 || player.horizontal > 0 && player.x > game.canvas.width - player.width) player.horizontal = 0;
+			if (player.horizontal < 0 && player.x < 1 || player.horizontal > 0 && player.x > game.canvas.width - player.size) player.horizontal = 0;
 			player.x += player.horizontal;
 			player.y -= player.vertical;
 			
-			if (player.powermode) {
-				player.health += 0.25;
-				player.healthcounter.innerHTML = Math.round(player.health);
+			if (player.power.on) {
+				player.health.level += 0.25;
+				player.health.counter.innerHTML = Math.round(player.health.level);
 			}
 			
 			game.context.fillStyle = player.color,
-			game.context.fillRect(player.x,player.y,player.width,player.height);
+			game.context.fillRect(player.x,player.y,player.size,player.size);
 			game.context.fillStyle = 'black',
-			game.context.strokeRect(player.x+1,player.y+1,player.width-1,player.height-1);	
+			game.context.strokeRect(player.x+1,player.y+1,player.size-1,player.size-1);	
 		} else {
 			player.y -= player.vertical
 
 			game.context.fillStyle = player.color,
-			game.context.fillRect(player.x,player.y,player.width,player.height);
+			game.context.fillRect(player.x,player.y,player.size,player.size);
 			game.context.fillStyle = 'black',
-			game.context.strokeRect(player.x+1,player.y+1,player.width-1,player.height-1);	
+			game.context.strokeRect(player.x+1,player.y+1,player.size-1,player.size-1);	
 		}
 	},
 	collision: function(drop) {
@@ -260,28 +257,28 @@ const player = {
 			const dropLft = drop.x;
 			const dropRgt = drop.x + drop.width;
 			const playUp = player.y;
-			const playDwn = player.y + player.height;
+			const playDwn = player.y + player.size;
 			const playLft = player.x
-			const playRgt = player.x + player.width;
+			const playRgt = player.x + player.size;
 			if ( ((playDwn >= dropUp && playDwn <= dropDwn && playLft >= dropLft && playLft <= dropRgt) || (playDwn >= dropUp && playDwn <= dropDwn && playRgt >= dropLft && playRgt <= dropRgt) || (playUp >= dropUp && playUp <= dropDwn && playLft >= dropLft && playLft <= dropRgt) 
 					|| (dropDwn >= playUp && dropDwn <= playDwn && dropLft >= playLft && dropLft <= playRgt) || (dropDwn >= playUp && dropDwn <= playDwn && dropRgt >= playLft && dropRgt <= playRgt) || (dropUp >= playUp && dropUp <= playDwn && dropLft >= playLft && dropLft <= playRgt)) && dropDwn < game.waterLine && dropDwn > game.cloudThickness) {
 				sounds.soundlooper();
-				if (player.powermode) {
-					player.health += 2;
+				if (player.power.on) {
+					player.health.level += 2;
 					player.y -= 10;
-					player.health += 10;
-					player.healthcounter.innerHTML = Math.round(player.health);
+					player.health.level += 10;
+					player.health.counter.innerHTML = Math.round(player.health.level);
 					player.points += 20;
 					player.pointcounter.innerHTML = player.points;
 				} else {
-					(player.health > 0) ? player.health -= 50 : player.health--;
-					if (player.health < 0) {
-						player.healthcounter.innerHTML = 0;
+					(player.health.level > 0) ? player.health.level -= 50 : player.health.level--;
+					if (player.health.level < 0) {
+						player.health.counter.innerHTML = 0;
 						player.alive = false;
 						player.vertical = -3;
 						return false;
 					} else {
-						player.healthcounter.innerHTML = Math.round(player.health);
+						player.health.counter.innerHTML = Math.round(player.health.level);
 						player.y += 20;
 					}
 				}
@@ -296,17 +293,16 @@ const player = {
 
 const sprinkles = {
 	colors: ['#F205B7','#A705F2','#2405F2','#0DC7DB','#0DDB25','#F5FC19','#FC8B19','#EB0909'],
-	drops: [], 
-	active: true,
-	speedrange: 1,
-	dripFrequency: 0.7,
-	obstacles: {
+	drops: [], // each sprinkle that is generated with .drip() function is stored here
+	speedrange: 1, // increments upwards, allowing faster sprinkles to be created
+	dripFrequency: 0.07, //maxes at 2.5
+	obstacles: { // creates black blocks on screen
 		amount: 0,
 		storage: [],
 		createObstacles: function() {
 			for (let i=sprinkles.obstacles.amount;i>0;i--) {
-				let wth = 10 + Math.floor(Math.random() * 5);
-				let hght = 5 + Math.floor(Math.random() * 5);
+				const wth = 10 + Math.floor(Math.random() * 5);
+				const hght = 5 + Math.floor(Math.random() * 5);
 				sprinkles.obstacles.storage.push(
 					{
 						x: Math.floor(Math.random() * (game.canvas.width - wth)),
@@ -343,18 +339,17 @@ const sprinkles = {
 			trueSpeed: spd
 		});
 	},
-	passCheck: function(drop) {
+	passiveCheck: function(drop) {
 		if (drop.y < player.y + player.size && drop.x < player.x+player.size+20 && drop.x+drop.width > player.x-20 && drop.y > player.y-100) return true;
 	},
 	adjust: function() {
 		console.log('adjust');
 		sprinkles.obstacles.checkObjectDraw();
-		let removals = [];
+		const removals = [];
 		for (let drop in sprinkles.drops) {
 			sprinkles.drops[drop].y += sprinkles.drops[drop].speed;
-			if (player.passivemode) {
-				if (sprinkles.passCheck(sprinkles.drops[drop])) {
-					console.log('in sight');
+			if (player.passive.on) {
+				if (sprinkles.passiveCheck(sprinkles.drops[drop])) {
 					(sprinkles.drops[drop].x > player.x + player.size/2) ? sprinkles.drops[drop].x++ : sprinkles.drops[drop].x--;
 				}
 			}
@@ -362,13 +357,11 @@ const sprinkles = {
 				let index = sprinkles.drops.indexOf(sprinkles.drops[drop]);
 				//console.log('push '+index + '   x: ' + sprinkles.drops[drop].x + ', y:' + sprinkles.drops[drop].y);
 				removals.push(index);
-				//sounds.soundlooper();
 			}
 			if (sprinkles.drops[drop].y + sprinkles.drops[drop].height < game.cloudThickness) {
 				game.context.fillStyle = 'white';
 				if (!player.alive) {
 					sprinkles.drops[drop].speed += sprinkles.drops[drop].trueSpeed * 0.25;
-					//sprinkles.drops[drop].speed += 0.5;
 				} else if (sprinkles.drops[drop].y + sprinkles.drops[drop].height - sprinkles.drops[drop].speed <= 0) {
 					sprinkles.drops[drop].speed = sprinkles.drops[drop].trueSpeed * 1.5;
 				}
@@ -376,7 +369,6 @@ const sprinkles = {
 				game.context.fillStyle = sprinkles.drops[drop].color;
 				if (!player.alive && sprinkles.drops[drop].y > game.cloudThickness) {
 					sprinkles.drops[drop].speed -= sprinkles.drops[drop].trueSpeed * 0.25;
-					//sprinkles.drops[drop].speed -= 0.5;
 				} else if (sprinkles.drops[drop].speed > sprinkles.drops[drop].trueSpeed) {
 					sprinkles.drops[drop].speed -= sprinkles.drops[drop].speed * 0.1;
 				}
@@ -384,7 +376,6 @@ const sprinkles = {
 				game.context.fillStyle = 'black';
 				if (!player.alive) {
 					sprinkles.drops[drop].speed -= sprinkles.drops[drop].trueSpeed * 0.1;
-					//sprinkles.drops[drop].speed -= 0.1;
 				} else if (sprinkles.drops[drop].speed > 0.5) {
 					sprinkles.drops[drop].speed -= sprinkles.drops[drop].speed * 0.025;						
 				}
@@ -392,9 +383,7 @@ const sprinkles = {
 			game.context.fillRect(sprinkles.drops[drop].x, sprinkles.drops[drop].y, sprinkles.drops[drop].width, sprinkles.drops[drop].height);
 		}
 		if (removals.length > 0) {
-			//console.log(removals);
 			if (removals.length > 1) {
-				//console.log('removals: ' + removals, sprinkles.drops);
 				for (let index in removals) {
 					let x = sprinkles.drops[removals[index]].x; let y = sprinkles.drops[removals[index]].y; //console.log('remove '+removals[index] + ': x:' + x + ', y:' + y);
 					sprinkles.drops.splice(removals[index],1);
@@ -417,16 +406,16 @@ function pushedKey(btn) {
 		if (btn.keyCode === 39 && player.horizontal < 2) player.horizontal = 2;
 		if (btn.keyCode === 38) player.vertical = player.fastvertical;
 		if (btn.keyCode === 40) player.vertical = 0;
-		if (btn.keyCode === 65 && player.passive.level >= 50 && !player.passivemode) {
-			player.passivemode = true;
+		if (btn.keyCode === 65 && player.passive.level >= 50 && !player.passive.on) {
+			player.passive.on = true;
 			player.passive.level -= 50;
 			setTimeout(function() {
-				player.passivemode = false;
+				player.passive.on = false;
 			}, 4000);
 		}
 		if (btn.keyCode === 67 && player.power.level > 0 && player.y < game.waterLine) { // C key
-			player.powermode = !player.powermode;
-			(player.powermode) ? (
+			player.power.on = !player.power.on;
+			(player.power.on) ? (
 				player.vertical *= 2,
 				player.fastvertical *= 2
 			) : (
@@ -435,8 +424,8 @@ function pushedKey(btn) {
 			);
 		}
 		if (btn.keyCode === 83 && player.slow.level > 0 && player.y < game.waterLine) { // S key
-			player.slowmotion = !player.slowmotion;
-			player.slowmotion ? (
+			player.slow.on = !player.slow.on;
+			player.slow.on ? (
 				clearInterval(game.interval),
 				game.interval = setInterval(sprinkling,game.speed*2)
 			) : (
