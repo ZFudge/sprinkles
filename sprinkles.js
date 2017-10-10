@@ -3,12 +3,36 @@ document.addEventListener("keyup",releasedKey);
 
 const game = {
 	canvas: document.getElementById('canv'),
-	speed: 20,
-	waterIntensity: 40,
+	speed: 20, // milliseconds in each interval
+	waterIntensity: 40, // sets shade of blue
 	waterRise: true,
 	waterFlex: function() {
 		(game.waterRise) ? game.waterIntensity++ : game.waterIntensity--;
 		if (game.waterIntensity >= 88 || game.waterIntensity <= 40) game.waterRise = !game.waterRise;
+	},
+	refresh: function() {
+		sprinkles.drops = [];
+		sprinkles.active = true;
+		sprinkles.speedrange = 1;
+		sprinkles.dripFrequency = 0.7;
+		sprinkles.obstacles.amount = 0;
+		sprinkles.obstacles.storage = [];
+	
+		player.pointcounter.innerHTML = 0;
+		player.healthcounter.innerHTML = 0;
+		player.healthbar.width = player.slow.width = player.power.width = player.passive.width = 0;
+		player.alive = true;
+		player.points = 0;
+		player.health = 0;
+		player.x = (game.canvas.width/2)-5;
+		player.y = game.canvas.height*0.92;
+		player.horizontal = 0;
+		player.vertical = 1;
+		player.speed = 3;
+	},
+	stopAndGo: function() {
+		(sprinkles.active) ? clearInterval(game.interval) : game.interval = setInterval(sprinkling,game.speed);
+		sprinkles.active = !sprinkles.active;
 	}
 }
 game.context = game.canvas.getContext('2d');
@@ -49,11 +73,8 @@ const player = {
 	y: game.canvas.height*0.92,
 	alive: true,
 	passivemode: false,
-	passivelevel: 0,
 	powermode: false,
-	powerlevel: 0,
 	slowmotion: false,
-	slowlevel: 0,
 	health: 0,
 	points: 0,
 	size: 10,
@@ -74,19 +95,22 @@ const player = {
 		powersky: '#228',
 		slowsky: '#242'
 	},
-	passivebar: {
+	passive: {
+		level: 0,
 		x: 5,
 		y: game.canvas.height - 45,
 		height: 10,
 		width: 0
 	},
-	powerbar: {
+	power: {
+		level: 0,
 		x: game.canvas.width/2,
 		y: game.canvas.height - 30,
 		height: 10,
 		width: 0
 	},
-	slowbar: {
+	slow: {
+		level: 0,
 		x: 5,
 		y: game.canvas.height - 30,
 		height: 10,
@@ -103,18 +127,19 @@ const player = {
 			if (player.powermode) player.powermode = false;
 			if (player.slowmotion) player.slowmotion = false;
 			
-			if (player.powerbar.width > player.powerbar.level) {
-				player.powerbar.width -= 0.01;
+			if (player.power.width > player.power.level) {
+				player.power.width -= 0.01;
+				player.power.width = player.power.width.toFixed(0);
 			}
 		} else if (player.powermode) {
 			if (player.slowmotion) player.slowmotion = false;
-			if (player.powerlevel > 0) {
-				player.powerlevel -= 0.2;
-				player.powerbar.width = player.powerlevel;
+			if (player.power.level > 0) {
+				player.power.level -= 0.2;
+				player.power.width = player.power.level.toFixed(0);
 			} else {
 				player.powermode = false;
-				player.powerlevel = 0;
-				player.powerbar.width = player.powerlevel;
+				player.power.level = 0;
+				player.power.width = player.power.level.toFixed(0);
 				player.vertical /= 2;
 				player.fastvertical /= 2;
 			}
@@ -122,33 +147,33 @@ const player = {
 			if (player.powermode) {
 				player.slowmotion = false;
 			} else {
-				if (player.slowlevel > 0) {
-					player.slowlevel -= 0.5;
-					player.slowbar.width = player.slowlevel;
+				if (player.slow.level > 0) {
+					player.slow.level -= 0.5;
+					player.slow.width = player.slow.level.toFixed(0);
 				} else {
 					player.slowmotion = false;
-					player.slowlevel = 0;
+					player.slow.level = 0;
 					clearInterval(game.interval);
 					game.interval = setInterval(sprinkling,game.speed);
 				}
 			}
 		} else if (player.vertical > 0 && player.y < game.waterLine) {
-			if (player.slowlevel < 120) {
-				player.slowlevel += 0.1;
-				player.slowbar.width = player.slowlevel;
-			} else if (player.powerlevel < 120) {
-				player.powerlevel += 0.05;
-				player.powerbar.width = player.powerlevel;
-			} else if (Math.abs(player.passivelevel - 240) > 0.025) {
-				player.passivelevel += 0.025;
-				player.passivebar.width = player.passivelevel;
+			if (player.slow.level < 120) {
+				player.slow.level += 0.1;
+				player.slow.width = player.slow.level.toFixed(0);
+			} else if (player.power.level < 120) {
+				player.power.level += 0.05;
+				player.power.width = player.power.level.toFixed(0);
+			} else if (player.passive.level < 240) {
+				player.passive.level += 0.025;
+				player.passive.width = player.passive.level.toFixed(0);
 			} else {
 				sprinkles.dripFrequency -= 0.0002;
 			}
 		}
 
-		if (Math.abs(player.passivelevel - player.passivebar.width) > 0.99) {
-			(player.passivebar.width < player.passivelevel / 10) ? player.passivebar.width++ : player.passivebar.width--;
+		if (Math.abs(player.passive.level - player.passive.width) > 0.99) {
+			(player.passive.width < player.passive.level / 10) ? player.passive.width++ : player.passive.width--;
 		}
 		if (Math.abs(player.health / 10 - player.healthbar.width) > 0.99) {
 			(player.healthbar.width < player.health / 10) ? player.healthbar.width++ : player.healthbar.width--;
@@ -166,11 +191,11 @@ const player = {
 	barDraw: function() {
 		player.adjustBars();
 		game.context.fillStyle = player.colors.magenta;
-		game.context.fillRect(player.passivebar.x, player.passivebar.y, player.passivebar.width, player.powerbar.height);
+		game.context.fillRect(player.passive.x, player.passive.y, player.passive.width, player.power.height);
 		game.context.fillStyle = player.colors.blue;
-		game.context.fillRect(player.powerbar.x, player.powerbar.y, player.powerbar.width, player.powerbar.height);
+		game.context.fillRect(player.power.x, player.power.y, player.power.width, player.power.height);
 		game.context.fillStyle = player.colors.green;
-		game.context.fillRect(player.slowbar.x, player.slowbar.y, player.slowbar.width, player.slowbar.height);
+		game.context.fillRect(player.slow.x, player.slow.y, player.slow.width, player.slow.height);
 		player.healthLayers(player.healthbar.width, 0, 240);
 	},
 	safeCheck: function() {
@@ -385,22 +410,21 @@ const sprinkles = {
 }
 
 function pushedKey(btn) {
-	if (btn.keyCode === 32) stopAndGo(); // space
-	if (btn.keyCode === 82) refresh();  // R
-	if (btn.keyCode === 84) test(); 	// T
+	if (btn.keyCode === 32) game.stopAndGo(); // space
+	if (btn.keyCode === 82) game.refresh();  // R
 	if (player.alive) {
 		if (btn.keyCode === 37 && player.horizontal > -2) player.horizontal = -2;
 		if (btn.keyCode === 39 && player.horizontal < 2) player.horizontal = 2;
 		if (btn.keyCode === 38) player.vertical = player.fastvertical;
 		if (btn.keyCode === 40) player.vertical = 0;
-		if (btn.keyCode === 65 && player.passivelevel >= 50 && !player.passivemode) {
+		if (btn.keyCode === 65 && player.passive.level >= 50 && !player.passivemode) {
 			player.passivemode = true;
-			player.passivelevel -= 50;
+			player.passive.level -= 50;
 			setTimeout(function() {
 				player.passivemode = false;
 			}, 4000);
 		}
-		if (btn.keyCode === 67 && player.powerlevel > 0 && player.y < game.waterLine) { // C key
+		if (btn.keyCode === 67 && player.power.level > 0 && player.y < game.waterLine) { // C key
 			player.powermode = !player.powermode;
 			(player.powermode) ? (
 				player.vertical *= 2,
@@ -410,7 +434,7 @@ function pushedKey(btn) {
 				player.fastvertical /= 2
 			);
 		}
-		if (btn.keyCode === 83 && player.slowlevel > 0 && player.y < game.waterLine) { // S key
+		if (btn.keyCode === 83 && player.slow.level > 0 && player.y < game.waterLine) { // S key
 			player.slowmotion = !player.slowmotion;
 			player.slowmotion ? (
 				clearInterval(game.interval),
@@ -430,32 +454,6 @@ function releasedKey(btn) {
 		if (btn.keyCode === 37 && player.horizontal < 0) player.horizontal += 2;
 		if (btn.keyCode === 39 && player.horizontal > 0) player.horizontal -= 2;
 	}
-}
-
-function refresh() {
-	sprinkles.drops = [];
-	sprinkles.active = true;
-	sprinkles.speedrange = 1;
-	sprinkles.dripFrequency = 0.7;
-	sprinkles.obstacles.amount = 0;
-	sprinkles.obstacles.storage = [];
-
-	player.pointcounter.innerHTML = 0;
-	player.healthcounter.innerHTML = 0;
-	player.slowbar.width = player.healthbar.width = player.powerbar.width = 0;
-	player.alive = true;
-	player.points = 0;
-	player.health = 0;
-	player.x = (game.canvas.width/2)-5;
-	player.y = game.canvas.height*0.92;
-	player.horizontal = 0;
-	player.vertical = 1;
-	player.speed = 3;
-}
-
-function stopAndGo() {
-	(sprinkles.active) ? clearInterval(game.interval) : game.interval = setInterval(sprinkling,game.speed);
-	sprinkles.active = !sprinkles.active;
 }
 
 const sounds = {
@@ -505,10 +503,6 @@ const sounds = {
 			sounds.notecounter = 1;
 		}
 	}
-}
-
-function test() {
-	console.log('test');
 }
 
 document.onload = function() {
