@@ -3,12 +3,36 @@ document.addEventListener("keyup",releasedKey);
 
 const game = {
 	canvas: document.getElementById('canv'),
-	speed: 20,
-	waterIntensity: 40,
+	speed: 20, // milliseconds in each interval
+	waterIntensity: 40, // sets shade of blue
 	waterRise: true,
 	waterFlex: function() {
 		(game.waterRise) ? game.waterIntensity++ : game.waterIntensity--;
 		if (game.waterIntensity >= 88 || game.waterIntensity <= 40) game.waterRise = !game.waterRise;
+	},
+	refresh: function() {
+		sprinkles.drops = [];
+		sprinkles.active = true;
+		sprinkles.speedrange = 1;
+		sprinkles.dripFrequency = 0.7;
+		sprinkles.obstacles.amount = 0;
+		sprinkles.obstacles.storage = [];
+	
+		player.pointcounter.innerHTML = 0;
+		player.healthcounter.innerHTML = 0;
+		player.healthbar.width = player.slowbar.width = player.powerbar.width = player.passivebar.width = 0;
+		player.alive = true;
+		player.points = 0;
+		player.health = 0;
+		player.x = (game.canvas.width/2)-5;
+		player.y = game.canvas.height*0.92;
+		player.horizontal = 0;
+		player.vertical = 1;
+		player.speed = 3;
+	},
+	stopAndGo: function() {
+		(sprinkles.active) ? clearInterval(game.interval) : game.interval = setInterval(sprinkling,game.speed);
+		sprinkles.active = !sprinkles.active;
 	}
 }
 game.context = game.canvas.getContext('2d');
@@ -105,16 +129,17 @@ const player = {
 			
 			if (player.powerbar.width > player.powerbar.level) {
 				player.powerbar.width -= 0.01;
+				player.powerbar.width = player.powerbar.width.toFixed(0);
 			}
 		} else if (player.powermode) {
 			if (player.slowmotion) player.slowmotion = false;
 			if (player.powerlevel > 0) {
 				player.powerlevel -= 0.2;
-				player.powerbar.width = player.powerlevel;
+				player.powerbar.width = player.powerlevel.toFixed(0);
 			} else {
 				player.powermode = false;
 				player.powerlevel = 0;
-				player.powerbar.width = player.powerlevel;
+				player.powerbar.width = player.powerlevel.toFixed(0);
 				player.vertical /= 2;
 				player.fastvertical /= 2;
 			}
@@ -124,7 +149,7 @@ const player = {
 			} else {
 				if (player.slowlevel > 0) {
 					player.slowlevel -= 0.5;
-					player.slowbar.width = player.slowlevel;
+					player.slowbar.width = player.slowlevel.toFixed(0);
 				} else {
 					player.slowmotion = false;
 					player.slowlevel = 0;
@@ -135,13 +160,13 @@ const player = {
 		} else if (player.vertical > 0 && player.y < game.waterLine) {
 			if (player.slowlevel < 120) {
 				player.slowlevel += 0.1;
-				player.slowbar.width = player.slowlevel;
+				player.slowbar.width = player.slowlevel.toFixed(0);
 			} else if (player.powerlevel < 120) {
 				player.powerlevel += 0.05;
-				player.powerbar.width = player.powerlevel;
-			} else if (Math.abs(player.passivelevel - 240) > 0.025) {
+				player.powerbar.width = player.powerlevel.toFixed(0);
+			} else if (player.passivelevel < 240) {
 				player.passivelevel += 0.025;
-				player.passivebar.width = player.passivelevel;
+				player.passivebar.width = player.passivelevel.toFixed(0);
 			} else {
 				sprinkles.dripFrequency -= 0.0002;
 			}
@@ -385,9 +410,8 @@ const sprinkles = {
 }
 
 function pushedKey(btn) {
-	if (btn.keyCode === 32) stopAndGo(); // space
-	if (btn.keyCode === 82) refresh();  // R
-	if (btn.keyCode === 84) test(); 	// T
+	if (btn.keyCode === 32) game.stopAndGo(); // space
+	if (btn.keyCode === 82) game.refresh();  // R
 	if (player.alive) {
 		if (btn.keyCode === 37 && player.horizontal > -2) player.horizontal = -2;
 		if (btn.keyCode === 39 && player.horizontal < 2) player.horizontal = 2;
@@ -430,32 +454,6 @@ function releasedKey(btn) {
 		if (btn.keyCode === 37 && player.horizontal < 0) player.horizontal += 2;
 		if (btn.keyCode === 39 && player.horizontal > 0) player.horizontal -= 2;
 	}
-}
-
-function refresh() {
-	sprinkles.drops = [];
-	sprinkles.active = true;
-	sprinkles.speedrange = 1;
-	sprinkles.dripFrequency = 0.7;
-	sprinkles.obstacles.amount = 0;
-	sprinkles.obstacles.storage = [];
-
-	player.pointcounter.innerHTML = 0;
-	player.healthcounter.innerHTML = 0;
-	player.slowbar.width = player.healthbar.width = player.powerbar.width = 0;
-	player.alive = true;
-	player.points = 0;
-	player.health = 0;
-	player.x = (game.canvas.width/2)-5;
-	player.y = game.canvas.height*0.92;
-	player.horizontal = 0;
-	player.vertical = 1;
-	player.speed = 3;
-}
-
-function stopAndGo() {
-	(sprinkles.active) ? clearInterval(game.interval) : game.interval = setInterval(sprinkling,game.speed);
-	sprinkles.active = !sprinkles.active;
 }
 
 const sounds = {
@@ -505,10 +503,6 @@ const sounds = {
 			sounds.notecounter = 1;
 		}
 	}
-}
-
-function test() {
-	console.log('test');
 }
 
 document.onload = function() {
