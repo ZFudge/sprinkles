@@ -34,7 +34,111 @@ const game = {
 	stopAndGo: function() {
 		(game.active) ? clearInterval(game.interval) : game.interval = setInterval(sprinkling,game.speed);
 		game.active = !game.active;
-	}
+	},
+	sounds: {
+		notecounter: 1,
+		sound1: new Audio('audio/normal/D.mp3'),
+		sound2: new Audio('audio/normal/G.mp3'),
+		sound3: new Audio('audio/normal/D_.mp3'),
+		sound4: new Audio('audio/normal/C.mp3'),
+		sound5: new Audio('audio/normal/D_2.mp3'),
+		sound6: new Audio('audio/normal/G2.mp3'),
+		sound7: new Audio('audio/normal/D2.mp3'),
+		sound8: new Audio('audio/normal/A_.mp3'),
+		sound9: new Audio('audio/power/D.mp3'),
+		sound10: new Audio('audio/power/G.mp3'),
+		sound11: new Audio('audio/power/DS.mp3'),
+		sound12: new Audio('audio/power/C.mp3'),
+		sound13: new Audio('audio/power/DS2.mp3'),
+		sound14: new Audio('audio/power/G2.mp3'),
+		sound15: new Audio('audio/power/D2.mp3'),
+		sound16: new Audio('audio/power/AS.mp3'),
+		theme: new Audio('audio/normal/sprinkles_2.mp3'),
+		slowTheme: new Audio('audio/normal/slow_theme.mp3'),
+		themeplay: function() {
+			game.sounds.theme.play();
+		},
+		toggleTheme: function() {
+			if (player.slow.on) {
+				game.sounds.theme.pause();
+				game.sounds.slowTheme.play();
+			} else {
+				game.sounds.theme.play();
+				game.sounds.slowTheme.pause();
+			}
+		},
+		soundlooper: function() {
+			if (player.power.on) {
+				switch(game.sounds.notecounter) {
+					case 0:
+						game.sounds.sound9.play();
+						break;
+					case 1:
+						game.sounds.sound10.play();
+						break;
+					case 2:
+						game.sounds.sound11.play();
+						break;
+					case 3:
+						game.sounds.sound12.play();
+						break;
+					case 4:
+						game.sounds.sound13.play();
+						break;
+					case 5:
+						game.sounds.sound14.play();
+						break;
+					case 6:
+						game.sounds.sound15.play();
+						break;
+					case 7:
+						game.sounds.sound16.play();
+						break;
+				}
+			} else {
+				switch(game.sounds.notecounter) {
+					case 0:
+						game.sounds.sound1.play();
+						break;
+					case 1:
+						game.sounds.sound2.play();
+						break;
+					case 2:
+						game.sounds.sound3.play();
+						break;
+					case 3:
+						game.sounds.sound4.play();
+						break;
+					case 4:
+						game.sounds.sound5.play();
+						break;
+					case 5:
+						game.sounds.sound6.play();
+						break;
+					case 6:
+						game.sounds.sound7.play();
+						break;
+					case 7:
+						game.sounds.sound8.play();
+						break;
+				}
+			}
+			if (game.sounds.notecounter < 7) {
+				game.sounds.notecounter++;
+			} else {
+				game.sounds.notecounter = 0;
+			}
+		}
+	},
+	test: function() {
+		if (game.t) {
+			game.sounds.theme.pause();
+		} else {
+			game.sounds.theme.play();
+		}
+		game.t = !game.t;
+	},
+	t: false
 }
 game.context = game.canvas.getContext('2d');
 game.interval = setInterval(sprinkling,game.speed);
@@ -151,13 +255,14 @@ const player = {
 			}
 		} else if (player.slow.on) {
 			if (player.power.on) {
-				player.slow.on = false;
+				player.power.on = false;
 			} else {
 				if (player.slow.level > 0) {
 					player.slow.level -= 0.5;
 					player.slow.width = player.slow.level.toFixed(0);
 				} else {
 					player.slow.on = false;
+					game.sounds.toggleTheme();
 					player.slow.level = 0;
 					clearInterval(game.interval);
 					game.interval = setInterval(sprinkling,game.speed);
@@ -211,6 +316,7 @@ const player = {
 		}
 		if (player.slow.on) {
 			player.slow.on = false;
+			game.sounds.toggleTheme();
 			clearInterval(game.interval);
 			game.interval = setInterval(sprinkling,game.speed);
 		}
@@ -262,7 +368,7 @@ const player = {
 			const playRgt = player.x + player.size;
 			if ( ((playDwn >= dropUp && playDwn <= dropDwn && playLft >= dropLft && playLft <= dropRgt) || (playDwn >= dropUp && playDwn <= dropDwn && playRgt >= dropLft && playRgt <= dropRgt) || (playUp >= dropUp && playUp <= dropDwn && playLft >= dropLft && playLft <= dropRgt) 
 					|| (dropDwn >= playUp && dropDwn <= playDwn && dropLft >= playLft && dropLft <= playRgt) || (dropDwn >= playUp && dropDwn <= playDwn && dropRgt >= playLft && dropRgt <= playRgt) || (dropUp >= playUp && dropUp <= playDwn && dropLft >= playLft && dropLft <= playRgt)) && dropDwn < game.waterLine && dropDwn > game.cloudThickness) {
-				sounds.soundlooper();
+				game.sounds.soundlooper();
 				if (player.power.on) {
 					player.health.level += 2;
 					player.y -= 10;
@@ -275,6 +381,11 @@ const player = {
 					if (player.health.level < 0) {
 						player.health.counter.innerHTML = 0;
 						player.alive = false;
+						if (player.slow.on) {
+							player.slow.on = false;
+							game.sounds.toggleTheme();
+						}
+						if (player.passive.on) player.passive.on = false;
 						player.vertical = -3;
 						return false;
 					} else {
@@ -401,6 +512,7 @@ const sprinkles = {
 function pushedKey(btn) {
 	if (btn.keyCode === 32) game.stopAndGo(); // space
 	if (btn.keyCode === 82) game.refresh();  // R
+	if (btn.keyCode === 84) game.test();  // T
 	if (player.alive) {
 		if (btn.keyCode === 37 && player.horizontal > -2) player.horizontal = -2;
 		if (btn.keyCode === 39 && player.horizontal < 2) player.horizontal = 2;
@@ -413,7 +525,7 @@ function pushedKey(btn) {
 				player.passive.on = false;
 			}, 4000);
 		}
-		if (btn.keyCode === 67 && player.power.level > 0 && player.y < game.waterLine) { // C key
+		if (btn.keyCode === 67 && player.power.level > 0 && player.y < game.waterLine && game.active) { // C key
 			player.power.on = !player.power.on;
 			(player.power.on) ? (
 				player.vertical *= 2,
@@ -423,12 +535,13 @@ function pushedKey(btn) {
 				player.fastvertical /= 2
 			);
 		}
-		if (btn.keyCode === 83 && player.slow.level > 0 && player.y < game.waterLine) { // S key
+		if (btn.keyCode === 83 && player.slow.level > 0 && player.y < game.waterLine && game.active) { // S key
 			player.slow.on = !player.slow.on;
+			game.sounds.toggleTheme();
 			player.slow.on ? (
 				clearInterval(game.interval),
 				game.interval = setInterval(sprinkling,game.speed*2)
-			) : (
+			) : ( 
 				clearInterval(game.interval),
 				game.interval = setInterval(sprinkling,game.speed)
 			);
@@ -445,55 +558,7 @@ function releasedKey(btn) {
 	}
 }
 
-const sounds = {
-	notecounter: 1,
-	sound1: new Audio('audio/D.mp3'),
-	sound2: new Audio('audio/G.mp3'),
-	sound3: new Audio('audio/D_.mp3'),
-	sound4: new Audio('audio/C.mp3'),
-	sound5: new Audio('audio/D_2.mp3'),
-	sound6: new Audio('audio/G2.mp3'),
-	sound7: new Audio('audio/D2.mp3'),
-	sound8: new Audio('audio/A_.mp3'),
-	theme: new Audio('audio/sprinkles_2.mp3'),
-	themeplay: function() {
-		sounds.theme.play();
-	},
-	soundlooper: function() {
-		switch(sounds.notecounter) {
-			case 1:
-				sounds.sound1.play();
-				break;
-			case 2:
-				sounds.sound2.play();
-				break;
-			case 3:
-				sounds.sound3.play();
-				break;
-			case 4:
-				sounds.sound4.play();
-				break;
-			case 5:
-				sounds.sound5.play();
-				break;
-			case 6:
-				sounds.sound6.play();
-				break;
-			case 7:
-				sounds.sound7.play();
-				break;
-			case 8:
-				sounds.sound8.play();
-				break;
-		}
-		if (sounds.notecounter < 8) {
-			sounds.notecounter++;
-		} else {
-			sounds.notecounter = 1;
-		}
-	}
-}
 
 document.onload = function() {
-	sounds.themeplay();
+	game.sounds.themeplay();
 }
