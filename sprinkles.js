@@ -334,7 +334,9 @@ const player = {
 	},
 	adjust: function() {
 		if (player.alive) {
-			if (player.horizontal < 0 && player.x < 1 || player.horizontal > 0 && player.x > game.canvas.width - player.size) player.horizontal = 0;
+			if (player.horizontal < 0 && player.x < 1 || player.horizontal > 0 && player.x > game.canvas.width - player.size) {
+				player.horizontal = 0;
+			}
 			player.x += player.horizontal;
 			player.y -= player.vertical;
 			
@@ -342,18 +344,10 @@ const player = {
 				player.health.level += 0.25;
 				player.health.counter.innerHTML = Math.round(player.health.level);
 			}
-			
-			game.context.fillStyle = player.color,
-			game.context.fillRect(player.x,player.y,player.size,player.size);
-			game.context.fillStyle = 'black',
-			game.context.strokeRect(player.x+1,player.y+1,player.size-1,player.size-1);	
+			player.draw();	
 		} else {
 			player.y -= player.vertical
-
-			game.context.fillStyle = player.color,
-			game.context.fillRect(player.x,player.y,player.size,player.size);
-			game.context.fillStyle = 'black',
-			game.context.strokeRect(player.x+1,player.y+1,player.size-1,player.size-1);	
+			player.draw();
 		}
 	},
 	collision: function(drop) {
@@ -399,11 +393,49 @@ const player = {
 		} else {
 			return false;
 		}
+	},
+	img: {
+		x: 0,
+		steps: 0,
+		image: new Image(),
+		adjust: function() {
+			player.img.steps++;
+			if (player.img.steps == 10) {
+				player.img.x += player.img.steps;
+				if (player.img.x == 80) player.img.x = 0;
+				player.img.steps = 0;
+			}
+		}
 	}
+	/*
+	draw: function() {
+		//game.context.fillStyle = player.color,
+		//game.context.fillRect(player.x,player.y,player.size,player.size);
+		//game.context.fillStyle = 'black',
+		//game.context.strokeRect(player.x+1,player.y+1,player.size-1,player.size-1);	
+	}, 
+	*/
+}
+player.img.image.src = 'player.png';
+player.draw = function() {
+	game.context.drawImage(player.img.image, player.img.x, 0, player.size, player.size*2, player.x, player.y, player.size, player.size*2);
+	//ctx.drawImage(image, innerx, innery, innerWidth, innerHeight, outerx, outery, outerWidth, outerHeight);
+	//context.drawImage(rabbit.image, rabbit.img.x, rabbit.img.y, rabbit.width, rabbit.height, rabbit.x, rabbit.y, rabbit.width, rabbit.height);
+	player.img.adjust();
 }
 
 const sprinkles = {
-	colors: ['#F205B7','#A705F2','#2405F2','#0DC7DB','#0DDB25','#F5FC19','#FC8B19','#EB0909'],
+	colors: {
+		pink: '#F205B7',
+		magenta: '#A705F2',
+		darkBlue: '#2405F2',
+		lightBlue: '#0DC7DB',
+		green: '#0DDB25',
+		yellow: '#F5FC19',
+		orange: '#FC8B19',
+		red: '#EB0909'
+	},
+	hexCodes: ['pink','magenta','darkBlue','lightBlue','green','yellow','orange','red'],
 	drops: [], // each sprinkle that is generated with .drip() function is stored here
 	speedrange: 1, // increments upwards, allowing faster sprinkles to be created
 	dripFrequency: 0.07, //maxes at 2.5
@@ -441,7 +473,7 @@ const sprinkles = {
 		const hgt = 10 + Math.floor(Math.random() * 10);
 		const spd = 1 + Math.floor(Math.random() * sprinkles.speedrange);
 		sprinkles.drops.push({
-			color: sprinkles.colors[Math.floor(Math.random() * sprinkles.colors.length)],
+			color: sprinkles.hexCodes[Math.floor(Math.random() * sprinkles.hexCodes.length)],
 			width: wth,
 			height: hgt,
 			x: Math.floor(Math.random() * game.canvas.width-wth), 
@@ -451,7 +483,8 @@ const sprinkles = {
 		});
 	},
 	passiveCheck: function(drop) {
-		if (drop.y < player.y + player.size && drop.x < player.x+player.size+20 && drop.x+drop.width > player.x-20 && drop.y > player.y-100) return true;
+		const passiveGap = 50;
+		if (drop.y < player.y + player.size && drop.x < player.x+player.size+passiveGap && drop.x+drop.width > player.x-passiveGap && drop.y > player.y-100) return true;
 	},
 	adjust: function() {
 		console.log('adjust');
@@ -461,7 +494,7 @@ const sprinkles = {
 			sprinkles.drops[drop].y += sprinkles.drops[drop].speed;
 			if (player.passive.on) {
 				if (sprinkles.passiveCheck(sprinkles.drops[drop])) {
-					(sprinkles.drops[drop].x > player.x + player.size/2) ? sprinkles.drops[drop].x++ : sprinkles.drops[drop].x--;
+					(sprinkles.drops[drop].x > player.x + player.size/2) ? sprinkles.drops[drop].x+=2 : sprinkles.drops[drop].x-=2;
 				}
 			}
 			if (sprinkles.drops[drop].y >= game.canvas.height || player.collision(sprinkles.drops[drop])) {
@@ -477,7 +510,8 @@ const sprinkles = {
 					sprinkles.drops[drop].speed = sprinkles.drops[drop].trueSpeed * 1.5;
 				}
 			} else if (sprinkles.drops[drop].y + sprinkles.drops[drop].height < game.waterLine) {
-				game.context.fillStyle = sprinkles.drops[drop].color;
+				//game.context.fillStyle = sprinkles.drops[drop].color;
+				game.context.fillStyle =  sprinkles.colors[sprinkles.drops[drop].color];
 				if (!player.alive && sprinkles.drops[drop].y > game.cloudThickness) {
 					sprinkles.drops[drop].speed -= sprinkles.drops[drop].trueSpeed * 0.25;
 				} else if (sprinkles.drops[drop].speed > sprinkles.drops[drop].trueSpeed) {
@@ -558,7 +592,3 @@ function releasedKey(btn) {
 	}
 }
 
-
-document.onload = function() {
-	game.sounds.themeplay();
-}
