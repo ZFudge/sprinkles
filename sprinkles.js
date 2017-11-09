@@ -160,9 +160,7 @@ function sprinkling() {
 	sprinkles.adjust();
 
 	if (player.alive) {
-		let odds = Math.random();
-		if (odds < sprinkles.dripFrequency) sprinkles.drip();
-
+		if (Math.random() < sprinkles.dripFrequency) sprinkles.drip();
 		player.safeCheck();
 		player.barDraw();
 	}
@@ -301,9 +299,7 @@ const player = {
 		player.health.drawLayers(player.health.width, 0, 240);
 	},
 	safeCheck: function() {
-		if (player.y + player.size < game.cloudThickness) {
-			player.levelup();
-		}
+		if (player.y + player.size < game.cloudThickness) player.levelup();
 	},
 	levelup: function() {
 		player.health.level += 100;
@@ -407,25 +403,19 @@ const player = {
 			}
 		}
 	}
-	/*
-	draw: function() {
-		//game.context.fillStyle = player.color,
-		//game.context.fillRect(player.x,player.y,player.size,player.size);
-		//game.context.fillStyle = 'black',
-		//game.context.strokeRect(player.x+1,player.y+1,player.size-1,player.size-1);	
-	}, 
-	*/
 }
 player.img.image.src = 'player.png';
 player.draw = function() {
 	game.context.drawImage(player.img.image, player.img.x, 0, player.size, player.size*2, player.x, player.y, player.size, player.size*2);
+	//game.context.fillStyle = 'white',
+	//game.context.strokeRect(player.x+1,player.y+1,player.size-1,player.size-1);	
 	//ctx.drawImage(image, innerx, innery, innerWidth, innerHeight, outerx, outery, outerWidth, outerHeight);
 	//context.drawImage(rabbit.image, rabbit.img.x, rabbit.img.y, rabbit.width, rabbit.height, rabbit.x, rabbit.y, rabbit.width, rabbit.height);
 	player.img.adjust();
 }
 
 const sprinkles = {
-	colors: {
+	hexCodes: {
 		pink: '#F205B7',
 		magenta: '#A705F2',
 		darkBlue: '#2405F2',
@@ -435,9 +425,9 @@ const sprinkles = {
 		orange: '#FC8B19',
 		red: '#EB0909'
 	},
-	hexCodes: ['pink','magenta','darkBlue','lightBlue','green','yellow','orange','red'],
+	colors: ['pink','magenta','darkBlue','lightBlue','green','yellow','orange','red'],
 	drops: [], // each sprinkle that is generated with .drip() function is stored here
-	speedrange: 1, // increments upwards, allowing faster sprinkles to be created
+	speedrange: 1, // range of vertical speed possible when creating sprinkles
 	dripFrequency: 0.07, //maxes at 2.5
 	obstacles: { // creates black blocks on screen
 		amount: 0,
@@ -457,9 +447,10 @@ const sprinkles = {
 			}
 		},
 		drawObstacles: function() {
-			for (let obst in sprinkles.obstacles.storage) {
+			sprinkles.obstacles.storage.forEach(o=>game.context.fillRect(o.x,o.x,o.width,o.height));
+			/*for (let obst in sprinkles.obstacles.storage) {
 				game.context.fillRect(sprinkles.obstacles.storage[obst].x,sprinkles.obstacles.storage[obst].y,sprinkles.obstacles.storage[obst].width,sprinkles.obstacles.storage[obst].height);
-			}
+			}*/
 		},
 		checkObjectDraw: function() {
 			if (sprinkles.obstacles.amount > 0) {
@@ -468,12 +459,14 @@ const sprinkles = {
 			}
 		}
 	},
+
+	// adds one sprinkle to 
 	drip: function() {
 		const wth = 5 + Math.floor(Math.random() * 5);
 		const hgt = 10 + Math.floor(Math.random() * 10);
 		const spd = 1 + Math.floor(Math.random() * sprinkles.speedrange);
 		sprinkles.drops.push({
-			color: sprinkles.hexCodes[Math.floor(Math.random() * sprinkles.hexCodes.length)],
+			color: sprinkles.colors[Math.floor(Math.random() * sprinkles.colors.length)],
 			width: wth,
 			height: hgt,
 			x: Math.floor(Math.random() * game.canvas.width-wth), 
@@ -487,9 +480,8 @@ const sprinkles = {
 		if (drop.y < player.y + player.size && drop.x < player.x+player.size+passiveGap && drop.x+drop.width > player.x-passiveGap && drop.y > player.y-100) return true;
 	},
 	adjust: function() {
-		console.log('adjust');
-		sprinkles.obstacles.checkObjectDraw();
-		const removals = [];
+		console.log('adjust');//sprinkles.obstacles.checkObjectDraw();
+		const removalIndexes = [];
 		for (let drop in sprinkles.drops) {
 			sprinkles.drops[drop].y += sprinkles.drops[drop].speed;
 			if (player.passive.on) {
@@ -500,7 +492,7 @@ const sprinkles = {
 			if (sprinkles.drops[drop].y >= game.canvas.height || player.collision(sprinkles.drops[drop])) {
 				let index = sprinkles.drops.indexOf(sprinkles.drops[drop]);
 				//console.log('push '+index + '   x: ' + sprinkles.drops[drop].x + ', y:' + sprinkles.drops[drop].y);
-				removals.push(index);
+				removalIndexes.push(index);
 			}
 			if (sprinkles.drops[drop].y + sprinkles.drops[drop].height < game.cloudThickness) {
 				game.context.fillStyle = 'white';
@@ -511,7 +503,7 @@ const sprinkles = {
 				}
 			} else if (sprinkles.drops[drop].y + sprinkles.drops[drop].height < game.waterLine) {
 				//game.context.fillStyle = sprinkles.drops[drop].color;
-				game.context.fillStyle =  sprinkles.colors[sprinkles.drops[drop].color];
+				game.context.fillStyle =  sprinkles.hexCodes[sprinkles.drops[drop].color];
 				if (!player.alive && sprinkles.drops[drop].y > game.cloudThickness) {
 					sprinkles.drops[drop].speed -= sprinkles.drops[drop].trueSpeed * 0.25;
 				} else if (sprinkles.drops[drop].speed > sprinkles.drops[drop].trueSpeed) {
@@ -527,19 +519,26 @@ const sprinkles = {
 			}
 			game.context.fillRect(sprinkles.drops[drop].x, sprinkles.drops[drop].y, sprinkles.drops[drop].width, sprinkles.drops[drop].height);
 		}
-		if (removals.length > 0) {
-			if (removals.length > 1) {
-				for (let index in removals) {
-					let x = sprinkles.drops[removals[index]].x; let y = sprinkles.drops[removals[index]].y; //console.log('remove '+removals[index] + ': x:' + x + ', y:' + y);
-					sprinkles.drops.splice(removals[index],1);
-					for (let index2 in removals) {
-						removals[index2] -= 1;
+		if (removalIndexes.length > 1) {
+	      	for (let i = 0; i < removalIndexes.length; i++) {
+	        	sprinkles.drops.splice(removalIndexes[0],1);
+	      	}
+	    } else if (removalIndexes.length == 1) {
+	      	sprinkles.drops.splice(removalIndexes[0],1);
+	    }
+		/*if (removalIndexes.length > 0) {
+			if (removalIndexes.length > 1) {
+				for (let index in removalIndexes) {
+					let x = sprinkles.drops[removalIndexes[index]].x; let y = sprinkles.drops[removalIndexes[index]].y; //console.log('remove '+removalIndexes[index] + ': x:' + x + ', y:' + y);
+					sprinkles.drops.splice(removalIndexes[index],1);
+					for (let index2 in removalIndexes) {
+						removalIndexes[index2] -= 1;
 					}
 				}
 			} else {
-				sprinkles.drops.splice(removals[0],1);
+				sprinkles.drops.splice(removalIndexes[0],1);
 			}
-		}
+		}*/
 	}
 }
 
