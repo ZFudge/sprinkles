@@ -395,7 +395,7 @@ const player = {
 		}
 	}
 }
-player.img.image.src = 'player.png';
+player.img.image.src = 'images/player.png';
 player.draw = function() {
 	game.context.drawImage(player.img.image, player.img.x, 0, player.size, player.size*2, player.x, player.y, player.size, player.size*2);
 	player.img.adjust();
