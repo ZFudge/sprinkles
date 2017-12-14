@@ -19,8 +19,6 @@ const game = {
 		sprinkles.obstacles.amount = 0;
 		sprinkles.obstacles.storage = [];
 	
-		player.pointcounter.innerHTML = 0;
-		player.health.counter.innerHTML = 0;
 		player.health.width = player.slow.width = player.power.width = player.passive.width = 0;
 		player.alive = true;
 		player.points = 0;
@@ -165,6 +163,7 @@ function sprinkling() {
 		player.barDraw();
 	}
 	player.adjust();
+	player.stats();
 }
 
 const player = {
@@ -176,7 +175,7 @@ const player = {
 	fastvertical: 2,
 	speed: 3,
 	alive: true,
-	pointcounter: document.getElementById('points'),
+	//pointcounter: document.getElementById('points'),
 	points: 0,
 	color: "#ccc",
 	colors: {
@@ -184,7 +183,7 @@ const player = {
 		blue: '#0BF',
 		green: '#0F2',
 		red: ['#F11','#C00','#900','#600','#100','#600','#900','#C00','#F11','#F44','#F99','#FFF','#F99','#F44','#F11','#C00','#900','#600','#100','#600','#900','#C00','#F11','#F44','#F99'],
-		gloom: '#3D007A',
+		gloom: '#0093C4',
 		passivesky: '#5C00BF',
 		powersky: '#228',
 		slowsky: '#242'
@@ -219,7 +218,7 @@ const player = {
 		y: game.canvas.height - 15,
 		height: 10,
 		width: 0,
-		counter: document.getElementById('health'),
+		//counter: document.getElementById('health'),
 		drawLayers: function(width, n, max) {
 			game.context.fillStyle = player.colors.red[n];
 			if (width <= max) {
@@ -322,9 +321,6 @@ const player = {
 			sprinkles.obstacles.createObstacles();
 		}
 
-		player.pointcounter.innerHTML = player.points;
-		player.health.counter.innerHTML = Math.round(player.health.level);
-
 		if (sprinkles.speedrange <= 4.9) sprinkles.speedrange += 0.1;
 		if (sprinkles.dripFrequency < .25) sprinkles.dripFrequency += 0.005;
 	},
@@ -338,7 +334,6 @@ const player = {
 			
 			if (player.power.on) {
 				player.health.level += 0.25;
-				player.health.counter.innerHTML = Math.round(player.health.level);
 			}
 			player.draw();	
 		} else {
@@ -363,13 +358,10 @@ const player = {
 					player.health.level += 2;
 					player.y -= 10;
 					player.health.level += 10;
-					player.health.counter.innerHTML = Math.round(player.health.level);
 					player.points += 20;
-					player.pointcounter.innerHTML = player.points;
 				} else {
 					(player.health.level > 0) ? player.health.level -= 50 : player.health.level--;
 					if (player.health.level < 0) {
-						player.health.counter.innerHTML = 0;
 						player.alive = false;
 						if (player.slow.on) {
 							player.slow.on = false;
@@ -379,7 +371,6 @@ const player = {
 						player.vertical = -3;
 						return false;
 					} else {
-						player.health.counter.innerHTML = Math.round(player.health.level);
 						player.y += 20;
 					}
 				}
@@ -407,11 +398,14 @@ const player = {
 player.img.image.src = 'player.png';
 player.draw = function() {
 	game.context.drawImage(player.img.image, player.img.x, 0, player.size, player.size*2, player.x, player.y, player.size, player.size*2);
-	//game.context.fillStyle = 'white',
-	//game.context.strokeRect(player.x+1,player.y+1,player.size-1,player.size-1);	
-	//ctx.drawImage(image, innerx, innery, innerWidth, innerHeight, outerx, outery, outerWidth, outerHeight);
-	//context.drawImage(rabbit.image, rabbit.img.x, rabbit.img.y, rabbit.width, rabbit.height, rabbit.x, rabbit.y, rabbit.width, rabbit.height);
 	player.img.adjust();
+}
+
+player.stats = function() {
+	game.context.font = "15px Sans-serif";
+	game.context.textAlign = "center";
+	game.context.fillStyle = 'white';
+	game.context.fillText(`Pts: ${player.points}, HP: ${player.health.level}`, game.canvas.width/2, 18);
 }
 
 const sprinkles = {
@@ -448,9 +442,7 @@ const sprinkles = {
 		},
 		drawObstacles: function() {
 			sprinkles.obstacles.storage.forEach(o=>game.context.fillRect(o.x,o.x,o.width,o.height));
-			/*for (let obst in sprinkles.obstacles.storage) {
-				game.context.fillRect(sprinkles.obstacles.storage[obst].x,sprinkles.obstacles.storage[obst].y,sprinkles.obstacles.storage[obst].width,sprinkles.obstacles.storage[obst].height);
-			}*/
+			
 		},
 		checkObjectDraw: function() {
 			if (sprinkles.obstacles.amount > 0) {
@@ -460,7 +452,7 @@ const sprinkles = {
 		}
 	},
 
-	// adds one sprinkle to 
+	// adds one sprinkle to sprinkles.drops[]
 	drip: function() {
 		const wth = 5 + Math.floor(Math.random() * 5);
 		const hgt = 10 + Math.floor(Math.random() * 10);
@@ -480,7 +472,6 @@ const sprinkles = {
 		if (drop.y < player.y + player.size && drop.x < player.x+player.size+passiveGap && drop.x+drop.width > player.x-passiveGap && drop.y > player.y-100) return true;
 	},
 	adjust: function() {
-		console.log('adjust');//sprinkles.obstacles.checkObjectDraw();
 		const removalIndexes = [];
 		for (let drop in sprinkles.drops) {
 			sprinkles.drops[drop].y += sprinkles.drops[drop].speed;
@@ -526,19 +517,6 @@ const sprinkles = {
 	    } else if (removalIndexes.length == 1) {
 	      	sprinkles.drops.splice(removalIndexes[0],1);
 	    }
-		/*if (removalIndexes.length > 0) {
-			if (removalIndexes.length > 1) {
-				for (let index in removalIndexes) {
-					let x = sprinkles.drops[removalIndexes[index]].x; let y = sprinkles.drops[removalIndexes[index]].y; //console.log('remove '+removalIndexes[index] + ': x:' + x + ', y:' + y);
-					sprinkles.drops.splice(removalIndexes[index],1);
-					for (let index2 in removalIndexes) {
-						removalIndexes[index2] -= 1;
-					}
-				}
-			} else {
-				sprinkles.drops.splice(removalIndexes[0],1);
-			}
-		}*/
 	}
 }
 
