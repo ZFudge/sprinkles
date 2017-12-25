@@ -23,6 +23,8 @@ const game = {
 		player.alive = true;
 		player.points = 0;
 		player.health.level = 0;
+		player.slow.level = 0;
+		player.points.level = 0;
 		player.x = (game.canvas.width/2)-5;
 		player.y = game.canvas.height*0.92;
 		player.horizontal = 0;
@@ -569,3 +571,13 @@ function releasedKey(btn) {
 	}
 }
 
+game.canvas.addEventListener('mousedown',pushCoor);
+game.canvas.addEventListener('mouseup',releaseCoor);
+
+function pushCoor(push) {
+	(push.clientX - window.innerWidth/2 + game.canvas.width/2 > player.x) ? player.horizontal = 2 : player.horizontal = -2;
+}
+
+function releaseCoor(push) {
+	player.horizontal = 0;
+}
