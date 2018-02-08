@@ -32,24 +32,8 @@ const game = {
 	},
 	sounds: {
 		notecounter: 1,
-		normal: [],
-		power: [],
-		sound1: new Audio('audio/normal/D.mp3'),
-		sound2: new Audio('audio/normal/G.mp3'),
-		sound3: new Audio('audio/normal/D_.mp3'),
-		sound4: new Audio('audio/normal/C.mp3'),
-		sound5: new Audio('audio/normal/D_2.mp3'),
-		sound6: new Audio('audio/normal/G2.mp3'),
-		sound7: new Audio('audio/normal/D2.mp3'),
-		sound8: new Audio('audio/normal/A_.mp3'),
-		sound9: new Audio('audio/power/D.mp3'),
-		sound10: new Audio('audio/power/G.mp3'),
-		sound11: new Audio('audio/power/DS.mp3'),
-		sound12: new Audio('audio/power/C.mp3'),
-		sound13: new Audio('audio/power/DS2.mp3'),
-		sound14: new Audio('audio/power/G2.mp3'),
-		sound15: new Audio('audio/power/D2.mp3'),
-		sound16: new Audio('audio/power/AS.mp3'),
+		normal: [ new Audio('audio/normal/D.mp3'), new Audio('audio/normal/G.mp3'), new Audio('audio/normal/D_.mp3'), new Audio('audio/normal/C.mp3'), new Audio('audio/normal/D_2.mp3'), new Audio('audio/normal/G2.mp3'), new Audio('audio/normal/D2.mp3'), new Audio('audio/normal/A_.mp3') ],
+		power: [ new Audio('audio/power/D.mp3'), new Audio('audio/power/G.mp3'), new Audio('audio/power/DS.mp3'), new Audio('audio/power/C.mp3'), new Audio('audio/power/DS2.mp3'), new Audio('audio/power/G2.mp3'), new Audio('audio/power/D2.mp3'), new Audio('audio/power/AS.mp3') ],
 		theme: new Audio('audio/normal/sprinkles_2.mp3'),
 		slowTheme: new Audio('audio/normal/slow_theme.mp3'),
 		toggleTheme() {
@@ -62,50 +46,8 @@ const game = {
 			}
 		},
 		soundlooper() {
-			if (player.power.on) {
-				switch(game.sounds.notecounter) {
-					case 0: game.sounds.sound9.play();
-						break;
-					case 1: game.sounds.sound10.play();
-						break;
-					case 2: game.sounds.sound11.play();
-						break;
-					case 3: game.sounds.sound12.play();
-						break;
-					case 4: game.sounds.sound13.play();
-						break;
-					case 5: game.sounds.sound14.play();
-						break;
-					case 6: game.sounds.sound15.play();
-						break;
-					case 7: game.sounds.sound16.play();
-						break;
-				}
-			} else {
-				switch(game.sounds.notecounter) {
-					case 0: game.sounds.sound1.play();
-						break;
-					case 1: game.sounds.sound2.play();
-						break;
-					case 2: game.sounds.sound3.play();
-						break;
-					case 3: game.sounds.sound4.play();
-						break;
-					case 4: game.sounds.sound5.play();
-						break;
-					case 5: game.sounds.sound6.play();
-						break;
-					case 6: game.sounds.sound7.play();
-						break;
-					case 7: game.sounds.sound8.play();
-						break;
-				}
-			}
-			if (game.sounds.notecounter < 7) {
-				game.sounds.notecounter++;
-			} else {
-				game.sounds.notecounter = 0;
-			}
+			(player.power.on) ? this.power[this.notecounter].play() : this.normal[this.notecounter].play();
+			(game.sounds.notecounter < 7) ? this.notecounter++ : this.notecounter = 0;
 		}
 	},
 	buttons: {
