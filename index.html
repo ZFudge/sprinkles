@@ -6,13 +6,17 @@
 	<meta name='viewport' content=' width=device-width, initial-scale=0.75, maximum-scale=0.75, user-scalable=0' />
 	<link rel="shortcut icon" type="image/x-icon" href="sprinkles.ico">
 	<link href="sprinkles.css" type="text/css" rel="stylesheet"> 
+	<link href="https://fonts.googleapis.com/css?family=Orbitron" rel="stylesheet">
 </head>
 
 <body>
 	<div id="outer-container">
 		<div id='sprinkle-container'>
 			<canvas id='levels-canvas' height='425' width='116'></canvas>
-			<div id="score-box"></div>
+			<div id="score-box">
+				<p>PTS :</p>
+				<p>HP :</p>
+			</div>
 			<canvas id='sprinkle-canvas' height='550' width='250'></canvas>
 			<div id="control-container">
 				<button id="pause" onclick="game.pauseUnpause()">Pause</button>

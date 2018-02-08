@@ -6,12 +6,12 @@ body {
   margin: 0;
   padding: 0;
   text-align: center;
-  font-family: sans-serif;
   -moz-user-select: none;
   -webkit-user-select: none;
   -ms-user-select: none;
   user-select: none;
   background-color: #AAA;
+  font-family: 'Orbitron', sans-serif;
 }
 
 #outer-container {
@@ -47,6 +47,13 @@ body {
 
 #score-box {
   grid-area: 2 / 3 / 3 / 4;
+  border-radius: 35px;
+  color: #DDD;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  font-weight: bold;
+  font-size: 12px;
 }
 
 #levels-canvas {
@@ -55,12 +62,12 @@ body {
   background-color: #111;
 }
 
-#levels-canvas, #sprinkle-canvas {
+#levels-canvas, #sprinkle-canvas, #score-box {
   box-shadow: -3px -5px 13px 0 #00000066,
     3px -5px 13px 0 #00000066,
     0 5px 10px 0 #CCCCCCCC;
+  background-color: #111;
 }
-
 
 #pause {
   height: 100%;
@@ -92,10 +99,6 @@ button:active {
   border-bottom: none;
   box-shadow: 0 1px 3px 0 #33333399;
 }
-
-canvas {
-  background-color: #111;
-} 
 
 #menu {
   display: none;
