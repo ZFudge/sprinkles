@@ -27,10 +27,16 @@ body {
   display: grid;
   grid-gap: 25px;
   border-radius: 50px;
-  background-color: #38b6ff; /*DDD*/
+  background-color: #38e4b5; /*#38b6ff DDD*/
   box-shadow: inset -3px -5px 13px 0 #00000066, inset 3px -5px 13px 0 #00000066, inset 0 8px 5px 0 #FFFFFF88, 0 4px 2px 0 rgba(0, 0, 0, 0.7);
-  grid-template-columns: 5px 250px 100px 5px;
   grid-template-rows: 5px 100px 425px 25px 5px;
+  grid-template-columns: 5px 250px 115px 5px;
+}
+
+#control-container {
+  grid-area: 4 / 2 / 5 / 4;
+  display: grid;
+  grid-template-columns: 115px 20px 115px 25px 115px;
 }
 
 #sprinkle-canvas {
@@ -55,23 +61,18 @@ body {
     0 5px 10px 0 #CCCCCCCC;
 }
 
-#control-container {
-  grid-area: 4 / 2 / 5 / 4;
-  display: grid;
-  grid-template-columns: 12px 100px 25px 100px 38px 100px;
-}
 
 #pause {
   height: 100%;
-  grid-column-start: 2;
+  grid-column-start: 1;
 }
 #show-controls {
   height: 100%;
-  grid-column-start: 4;
+  grid-column-start: 3;
 }
 #reset {
   height: 100%;
-  grid-column-start: 6;
+  grid-column-start: 5;
 }
 
 button {
