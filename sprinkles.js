@@ -8,6 +8,85 @@ const game = {
 		(game.waterRise) ? game.waterShade++ : game.waterShade--;
 		if (game.waterShade >= 88 || game.waterShade <= 40) game.waterRise = !game.waterRise;
 	},
+	sounds: {
+		notecounter: 1,
+		normal: [ new Audio('audio/normal/D.mp3'), new Audio('audio/normal/G.mp3'), new Audio('audio/normal/D_.mp3'), new Audio('audio/normal/C.mp3'), new Audio('audio/normal/D_2.mp3'), new Audio('audio/normal/G2.mp3'), new Audio('audio/normal/D2.mp3'), new Audio('audio/normal/A_.mp3') ],
+		power: [ new Audio('audio/power/D.mp3'), new Audio('audio/power/G.mp3'), new Audio('audio/power/DS.mp3'), new Audio('audio/power/C.mp3'), new Audio('audio/power/DS2.mp3'), new Audio('audio/power/G2.mp3'), new Audio('audio/power/D2.mp3'), new Audio('audio/power/AS.mp3') ],
+		theme: new Audio('audio/normal/normal_theme.wav'),
+		normalTheme: new Audio('audio/normal/normal_theme.wav'),
+		slowTheme: new Audio('audio/slow/slow_theme.mp3'),
+		powerTheme: new Audio("audio/power/power_theme.mp3"),
+		passiveTheme: new Audio("audio/passive_theme.wav"),
+		soundlooper() {
+			(this.theme.muted) ? null : (player.state === "power") ? this.power[this.notecounter].play() : this.normal[this.notecounter].play();
+			(game.sounds.notecounter < 7) ? this.notecounter++ : this.notecounter = 0;
+		}
+	},
+	buttons: {
+		reset: document.getElementById("reset"),
+		sound: document.getElementById("sound"),
+		countrols: document.getElementById("show-controls"),
+		soundImageToggle() {
+			if (game.sounds.theme.muted) {
+				game.sounds.theme.muted = false;
+				if (game.active) game.sounds.theme.play();
+				this.sound.style.backgroundImage = "url('mute.png')";
+			} else {
+				game.sounds.theme.muted = true;
+				this.sound.style.backgroundImage = "url('unmute.png')";
+			}
+			if (!game.on) {
+				game.pauseUnpause();
+				game.on = true;
+			}
+		}
+	},
+	drawSky() {
+		(player.state === "passive") ? sprinkles.context.fillStyle = player.colors.passivesky : (player.state === "power") ? sprinkles.context.fillStyle = player.colors.powersky : (player.state === "slow") ? sprinkles.context.fillStyle = player.colors.slowsky : sprinkles.context.fillStyle = player.colors.gloom;
+		sprinkles.context.fillRect(0, game.cloudThickness, sprinkles.canvas.width, game.waterLine);
+	},
+	drawWater() {
+		let fillIt = '#0000'+ game.waterShade.toString();
+		sprinkles.context.fillStyle = fillIt;
+		sprinkles.context.fillRect(0, game.waterLine, sprinkles.canvas.width, sprinkles.canvas.height);
+		game.waterAdjust();
+	},
+	showControls() {
+		if (this.on) {
+			if (this.active || sprinkles.canvas.style.opacity === "1") {
+				if (this.active) this.pauseUnpause();
+				sprinkles.canvas.style.opacity = 0;
+				player.score.style.opacity = 0;
+				player.levels.canvas.style.opacity = 0;
+				document.getElementById('menu').style.opacity = 1;
+			} else {
+				sprinkles.canvas.style.opacity = 1;
+				player.score.style.opacity = 1;
+				player.levels.canvas.style.opacity = 1;
+				document.getElementById('menu').style.opacity = 0;
+			}
+		} else {
+			this.on = true;
+			this.pauseUnpause();
+		}
+	},
+	pauseUnpause() {
+		if (document.getElementById('menu').style.opacity == "1") {
+			sprinkles.canvas.style.opacity = 1;
+			player.score.style.opacity = 1;
+			player.levels.canvas.style.opacity = 1;
+			document.getElementById('menu').style.opacity = 0;
+		}
+		this.on = true;
+		this.active = !this.active;
+		if (this.active) {
+			this.loop = setInterval(mainFunction,this.ms);
+			this.sounds.theme.play();
+		} else {
+			clearInterval(this.loop);
+			this.sounds.theme.pause();
+		}
+	},
 	reset() {
 		this.on = true;
 		if (!this.active) {
@@ -28,71 +107,6 @@ const game = {
 		player.movement.horizontal = 0;
 		player.movement.vertical = 1;
 		player.movement.speed = 3;
-	},
-	pauseUnpause() {
-		this.on = true;
-		this.active = !this.active;
-		if (this.active) {
-			this.loop = setInterval(mainFunction,this.ms);
-			this.sounds.theme.play();
-		} else {
-			clearInterval(this.loop);
-			this.sounds.theme.pause();
-		}
-	},
-	sounds: {
-		notecounter: 1,
-		normal: [ new Audio('audio/normal/D.mp3'), new Audio('audio/normal/G.mp3'), new Audio('audio/normal/D_.mp3'), new Audio('audio/normal/C.mp3'), new Audio('audio/normal/D_2.mp3'), new Audio('audio/normal/G2.mp3'), new Audio('audio/normal/D2.mp3'), new Audio('audio/normal/A_.mp3') ],
-		power: [ new Audio('audio/power/D.mp3'), new Audio('audio/power/G.mp3'), new Audio('audio/power/DS.mp3'), new Audio('audio/power/C.mp3'), new Audio('audio/power/DS2.mp3'), new Audio('audio/power/G2.mp3'), new Audio('audio/power/D2.mp3'), new Audio('audio/power/AS.mp3') ],
-		theme: new Audio('audio/normal/sprinkles_2.mp3'),
-		slowTheme: new Audio('audio/normal/slow_theme.mp3'),
-		updateThemeSpeed() {
-			if (player.state === "slow") {
-				game.sounds.theme.pause();
-				game.sounds.slowTheme.play();
-			} else {
-				game.sounds.theme.play();
-				game.sounds.slowTheme.pause();
-			}
-		},
-		soundlooper() {
-			(player.state === "power") ? this.power[this.notecounter].play() : this.normal[this.notecounter].play();
-			(game.sounds.notecounter < 7) ? this.notecounter++ : this.notecounter = 0;
-		}
-	},
-	buttons: {
-		reset: document.getElementById("reset"),
-		sound: document.getElementById("sound"),
-		countrols: document.getElementById("show-controls"),
-		soundImageToggle() {
-			if (game.sounds.theme.muted) {
-				game.sounds.theme.muted = false;
-				this.sound.style.backgroundImage = "url('mute.png')";
-			} else {
-				game.sounds.theme.muted = true;
-				this.sound.style.backgroundImage = "url('unmute.png')";
-			}
-		}
-	},
-	drawSky() {
-		(player.state === "passive") ? sprinkles.context.fillStyle = player.colors.passivesky : (player.state === "power") ? sprinkles.context.fillStyle = player.colors.powersky : (player.state === "slow") ? sprinkles.context.fillStyle = player.colors.slowsky : sprinkles.context.fillStyle = player.colors.gloom;
-		sprinkles.context.fillRect(0, game.cloudThickness, sprinkles.canvas.width, game.waterLine);
-	},
-	drawWater() {
-		let fillIt = '#0000'+ game.waterShade.toString();
-		sprinkles.context.fillStyle = fillIt;
-		sprinkles.context.fillRect(0, game.waterLine, sprinkles.canvas.width, sprinkles.canvas.height);
-		game.waterAdjust();
-	},
-	showControls() {
-		this.pauseUnpause();
-		if (this.active) {
-			document.getElementById('sprinkle-canvas').style.opacity = 1;
-			document.getElementById('menu').style.opacity = 0;
-		} else {
-			document.getElementById('sprinkle-canvas').style.opacity = 0;
-			document.getElementById('menu').style.opacity = 1;
-		}
 	}
 }
 
@@ -182,6 +196,24 @@ game.waterLine = sprinkles.canvas.height - 100;
 
 const player = {
 	state: "normal",
+	score: document.getElementById("score-box"),
+	setState(status) {
+		if (this.state === "power") {
+			this.movement.vertical /= 2;
+			this.movement.fastVertical /= 2;
+		} else if (status === "power") {
+			this.movement.vertical *= 2;
+			this.movement.fastVertical *= 2;
+		}
+		this.state = status;
+		const mute = game.sounds.theme.muted;
+		game.sounds.theme.pause();
+		game.sounds.theme.src = (status === "normal") ? game.sounds.normalTheme.src : 
+			(status === "slow") ? game.sounds.slowTheme.src : 
+				(status === "power") ? game.sounds.powerTheme.src : 
+					(status === "passive") ? game.sounds.passiveTheme.src : null;
+		if (!mute) game.sounds.theme.play();
+	},
 	alive: true,
 	size: 10,
 	points: 0,
@@ -240,23 +272,20 @@ const player = {
 			if (this.state === "passive") {
 					
 			} else if (this.state === "power") {
-				if (this.levels.power.level > 0) {
-					this.levels.power.level -= 0.2;
-				} else {
-					this.state = "normal";
+				if (this.levels.power.level < 0) {
+					this.setState("normal");
 					this.levels.power.level = 0;
-					this.movement.vertical /= 2;
-					this.movement.fastVertical /= 2;
+				} else {
+					this.levels.power.level -= 0.2;
 				}
 			} else if (this.state === "slow") {
-				if (this.levels.slow.level > 0) {
-					this.levels.slow.level -= 0.75;
-				} else {
-					game.sounds.updateThemeSpeed(); // before state change
-					this.state = "normal";
+				if (this.levels.slow.level < 0) {
+					this.setState("normal");
 					this.levels.slow.level = 0;
 					clearInterval(game.loop);
 					game.loop = setInterval(mainFunction,game.ms);
+				} else {
+					this.levels.slow.level -= 0.75;
 				}
 			} else {
 				alert("Error: player state is " + this.state);
@@ -284,15 +313,12 @@ const player = {
 		this.movement.y = sprinkles.canvas.height * 0.92;
 		if (this.state != "normal" && this.state != "passive") {
 			if (this.state === "power") {
-				this.movement.fastVertical /= 2;
-				this.movement.vertical /= 2;
 			}
 			if (this.state === "slow") {
-				game.sounds.updateThemeSpeed();
 				clearInterval(game.loop);
 				game.loop = setInterval(mainFunction,game.ms);
 			}
-			this.state = "normal";
+			this.setState("normal");
 		}
 		if (sprinkles.speedRange <= 4.9) sprinkles.speedRange += 0.1;
 		if (sprinkles.dripFrequency < .25) sprinkles.dripFrequency += 0.005;
@@ -324,6 +350,7 @@ const player = {
 				game.sounds.soundlooper();
 				if (this.state === "power") {
 					this.levels.health.level += 10; // 4 : 1 
+					this.levels.power.level -= 5;
 					this.points += 200;
 					this.movement.y -= Math.ceil(Math.random() * 5 + 5);
 				} else {
@@ -334,11 +361,7 @@ const player = {
 						this.alive = false;
 						this.barDraw();
 						this.score.children[1].innerHTML = "You Died";
-						if (this.state === "slow") {
-							game.sounds.updateThemeSpeed(); // before state change
-							this.state = "normal;"
-						}
-						if (this.state === "passive") this.state = "normal";
+						if (this.state === "slow" || this.state === "passive") this.setState("normal");
 						return false;
 					} else {
 						this.movement.y += sprinkles.impactForce();
@@ -364,7 +387,6 @@ const player = {
 			}
 		}
 	},
-	score: document.getElementById("score-box"),
 	updateStats() {
 		this.score.children[0].innerHTML = `PTS : ${this.points}`;
 		this.score.children[1].innerHTML = `HP : ${this.levels.health.level.toFixed(0)}`;
@@ -390,12 +412,7 @@ function pushedKey(btn) {// 90 z, 88 x, 67 c
 		if (btn.keyCode === 38) player.movement.vertical = player.movement.fastVertical;
 		if (btn.keyCode === 40) player.movement.vertical = 0;
 		if (btn.keyCode === 83 && player.levels.slow.level > 5 && player.movement.y < game.waterLine && game.active && player.state !== "passive") { // S key Slow
-			if (player.state === "power") {
-				player.movement.vertical /= 2;
-				player.movement.fastVertical /= 2;
-			}
-			player.state = (player.state === "slow") ? "normal" : "slow";
-			game.sounds.updateThemeSpeed();  // after state assignment ^
+			(player.state === "slow") ? player.setState("normal") : player.setState("slow");
 			(player.state === "slow") ? (
 				clearInterval(game.loop),
 				game.loop = setInterval(mainFunction,game.ms*2)
@@ -409,27 +426,16 @@ function pushedKey(btn) {// 90 z, 88 x, 67 c
 				clearInterval(game.loop),
 				game.loop = setInterval(mainFunction,game.ms)
 			}
-			player.state = (player.state === "power") ? "normal" : "power";
-			game.sounds.updateThemeSpeed();
-			if (player.state === "power") {
-				player.movement.vertical *= 2;
-				player.movement.fastVertical *= 2;
-			} else {
-				player.movement.vertical /= 2;
-				player.movement.fastVertical /= 2;
-			}
+			(player.state === "power") ? player.setState("normal") : player.setState("power");
 		}
 		if (btn.keyCode === 70 && player.state != "passive" && player.levels.passive.level >= 50) { // F Key Passive
 			if (player.state === "slow") {
 				clearInterval(game.loop),
 				game.loop = setInterval(mainFunction,game.ms)
-			} else if (player.state === "power") {
-				player.movement.vertical /= 2;
-				player.movement.fastVertical /= 2;
 			}
-			player.state = "passive";
+			player.setState("passive");
 			player.levels.passive.level -= 50;
-			setTimeout(() => player.state = "normal", 4000);
+			setTimeout(() => player.setState("normal"), 4000);
 		}
 	}
 	if (!game.on) {
