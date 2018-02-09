@@ -10,7 +10,7 @@ body {
   -webkit-user-select: none;
   -ms-user-select: none;
   user-select: none;
-  background-color: #AAA;
+  background-color: #EEE;
   font-family: 'Orbitron', sans-serif;
 }
 
@@ -27,7 +27,7 @@ body {
   display: grid;
   grid-gap: 25px;
   border-radius: 50px;
-  background-color: #38e4b5; /*#38b6ff DDD*/
+  background-color: #F9F9F9; /*#38b6ff DDD*/
   box-shadow: inset -3px -5px 13px 0 #00000066, inset 3px -5px 13px 0 #00000066, inset 0 8px 5px 0 #FFFFFF88, 0 4px 2px 0 rgba(0, 0, 0, 0.7);
   grid-template-rows: 5px 100px 425px 25px 5px;
   grid-template-columns: 5px 250px 115px 5px;
@@ -41,7 +41,7 @@ body {
 
 #sprinkle-canvas {
   grid-area: 2 / 2 / 4 / 4;
-  border-radius: 50px;
+  border-radius: 35px;
   background-color: #111;
 }
 

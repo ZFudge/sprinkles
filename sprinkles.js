@@ -13,7 +13,7 @@ const game = {
 		sprinkles.speedRange = 1;
 		sprinkles.dripFrequency = 0.07;
 		player.levels.health.level = player.levels.health.height = 100;
-		player.levels.slow.level = player.levels.power.level = player.levels.passive.level = 0;
+		player.levels.slow.level = player.levels.power.level = player.levels.passive.level = player.levels.passive.height = 0;
 		player.alive = true;
 		player.points = 0;
 		player.movement.x = (sprinkles.canvas.width/2)-5;
@@ -172,19 +172,17 @@ const player = {
 		},
 		passive:  {
 			level: 0,	// max 425
-			height: 0
+			height: 0	// moves towards level, used for drawing height on canvas
 		},
 		health:  {
-			level: 100,	// max 20,000
-			height: 100,
+			level: 100,	// max None
+			height: 100,	
 			drawLayers(height, n, max) {
 				player.levels.context.fillStyle = player.colors.red[n];
 				if (height <= max) {
 					player.levels.context.fillRect(2, player.levels.canvas.height - height / 4, 25, player.levels.canvas.height - (Math.abs(player.levels.canvas.height - height / 4)) );
-					//sprinkles.context.fillRect(player.health.x, player.health.y, height, player.health.height);
 				} else {
 					player.levels.context.fillRect(2, player.levels.canvas.height - max / 4, 25, player.levels.canvas.height - (Math.abs(player.levels.canvas.height - max / 4)));
-					//sprinkles.context.fillRect(player.health.x, player.health.y, max, player.health.height);
 					if (max >= 75) player.levels.health.drawLayers(height-max, n+1, max - 75);
 				}
 			}
@@ -192,7 +190,7 @@ const player = {
 	},
 	adjustBars() {
 		if (Math.abs(this.levels.health.height - this.levels.health.level) > 3) (this.levels.health.height > this.levels.health.level) ? this.levels.health.height -= 3 : this.levels.health.height += 3;
-		if (Math.abs(this.levels.passive.height - this.levels.passive.level) > 3) (this.levels.passive.height > this.levels.passive.level) ? this.levels.passive.height -= 2 : this.levels.passive.height += 2; // because passive level only drops in high amounts
+		if (Math.abs(this.levels.passive.height - this.levels.passive.level) > 0.5) (this.levels.passive.height > this.levels.passive.level) ? this.levels.passive.height -= 2 : this.levels.passive.height += 2; // because passive level only drops in high amounts
 		if (this.state === "normal") {
 			if (this.movement.vertical > 0 && this.movement.y < game.waterLine) {
 				if (this.levels.slow.level < this.levels.max) {
@@ -201,8 +199,8 @@ const player = {
 					this.levels.power.level += 0.08;
 				} else if (this.levels.passive.level < this.levels.max * 2) {
 					this.levels.passive.level += 0.04;
-				} else {
-					sprinkles.dripFrequency -= 0.000002;
+				} else if (sprinkles.dripFrequency > 0.07) {
+					sprinkles.dripFrequency -= 0.00002;
 				}
 			}
 		} else {
@@ -236,26 +234,22 @@ const player = {
 		player.adjustBars();
 		this.levels.context.clearRect(0,0,this.levels.canvas.width,this.levels.canvas.height);
 		
-		//this.levels.context.fillStyle = "#F00";
-		//this.levels.context.fillRect(2, 									this.levels.canvas.height - this.levels.health.height / 4, 	25, 		this.levels.canvas.height - (Math.abs(this.levels.canvas.height - this.levels.health.height / 4)) );
-		//
 		this.levels.health.drawLayers(this.levels.health.height, 0, 1700);
-
 		this.levels.context.fillStyle = player.colors.green;
 		this.levels.context.fillRect(2+0.25 * this.levels.canvas.width, 	this.levels.canvas.height - (this.levels.slow.level * 2), 	25, 	(Math.abs(this.levels.canvas.height - this.levels.slow.level) * 2));
 		this.levels.context.fillStyle = player.colors.blue;
 		this.levels.context.fillRect(2+0.5 * this.levels.canvas.width, 		this.levels.canvas.height - (this.levels.power.level * 2), 	25, 	(Math.abs(this.levels.canvas.height - this.levels.power.level) * 2));
 		this.levels.context.fillStyle = player.colors.magenta;
-		this.levels.context.fillRect(2+0.75 * this.levels.canvas.width, 	this.levels.canvas.height - this.levels.passive.height, 	25, 	this.levels.canvas.height - (Math.abs(this.levels.canvas.height - this.levels.passive.level)));
+		this.levels.context.fillRect(2+0.75 * this.levels.canvas.width, 	this.levels.canvas.height - this.levels.passive.height, 	25, 	this.levels.canvas.height - (Math.abs(this.levels.canvas.height - this.levels.passive.height)));
 	},
 	safeCheck() {
 		if (player.movement.y + player.size < game.cloudThickness) player.levelup();
 	},
 	levelup() {
 		this.levels.health.level += 100;
-		this.points += 100;
+		this.points += 1000;
 		this.movement.y = sprinkles.canvas.height * 0.92;
-		if (this.state != "normal") {
+		if (this.state != "normal" && this.state != "passive") {
 			if (this.state === "power") {
 				this.movement.fastVertical /= 2;
 				this.movement.vertical /= 2;
@@ -272,7 +266,8 @@ const player = {
 	},
 	adjust() {
 		if (this.alive) {
-			if (this.state === "power") this.levels.health.level += 0.25;
+			if (this.state === "power") this.levels.health.level += 1, this.points += 5;
+			if (this.state === "passive") this.levels.health.level += 5, this.points += 10;
 			if (this.movement.horizontal < 0 && this.movement.x < 1 || this.movement.horizontal > 0 && this.movement.x > sprinkles.canvas.width - this.size) this.movement.horizontal = 0;
 			this.movement.x += this.movement.horizontal;
 			this.movement.y -= this.movement.vertical;
@@ -295,8 +290,8 @@ const player = {
 					|| (dropDwn >= playUp && dropDwn <= playDwn && dropLft >= playLft && dropLft <= playRgt) || (dropDwn >= playUp && dropDwn <= playDwn && dropRgt >= playLft && dropRgt <= playRgt) || (dropUp >= playUp && dropUp <= playDwn && dropLft >= playLft && dropLft <= playRgt)) && dropDwn < game.waterLine && dropDwn > game.cloudThickness) {
 				game.sounds.soundlooper();
 				if (this.state === "power") {
-					this.levels.health.level += 2;
-					this.points += 20;
+					this.levels.health.level += 10; // 4 : 1 
+					this.points += 200;
 					this.movement.y -= Math.ceil(Math.random() * 5 + 5);
 				} else {
 					this.levels.health.level -= 100;
@@ -361,28 +356,43 @@ function pushedKey(btn) {// 90 z, 88 x, 67 c
 		if (btn.keyCode === 39 && player.movement.horizontal < 2) player.movement.horizontal = 2;
 		if (btn.keyCode === 38) player.movement.vertical = player.movement.fastVertical;
 		if (btn.keyCode === 40) player.movement.vertical = 0;
-		if (btn.keyCode === 65 && player.levels.passive.level >= 50) {
+		if (btn.keyCode === 65 && player.state != "passive" && player.levels.passive.level >= 50) {
+			if (player.state === "slow") {
+				clearInterval(game.loop),
+				game.loop = setInterval(mainFunction,game.ms)
+			} else if (player.state === "power") {
+				player.movement.vertical /= 2;
+				player.movement.fastVertical /= 2;
+			}
 			player.state = "passive";
 			player.levels.passive.level -= 50;
 			setTimeout(() => player.state = "normal", 4000);
 		}
-		if (btn.keyCode === 67 && player.levels.power.level > 5 && player.movement.y < game.waterLine && game.active) { // C key
+		if (btn.keyCode === 67 && player.levels.power.level > 5 && player.movement.y < game.waterLine && game.active && player.state !== "passive") { // C key
+			if (player.state === "slow") {
+				clearInterval(game.loop),
+				game.loop = setInterval(mainFunction,game.ms)
+			}
 			player.state = (player.state === "power") ? "normal" : "power";
-			(player.state === "power") ? (
-				player.movement.vertical *= 2,
-				player.movement.fastVertical *= 2
-			) : (
-				player.movement.vertical /= 2,
-				player.movement.fastVertical /= 2
-			);
+			if (player.state === "power") {
+				player.movement.vertical *= 2;
+				player.movement.fastVertical *= 2;
+			} else {
+				player.movement.vertical /= 2;
+				player.movement.fastVertical /= 2;
+			}
 		}
-		if (btn.keyCode === 83 && player.levels.slow.level > 5 && player.movement.y < game.waterLine && game.active) { // S key
+		if (btn.keyCode === 83 && player.levels.slow.level > 5 && player.movement.y < game.waterLine && game.active && player.state !== "passive") { // S key
+			if (player.state === "power") {
+				player.movement.vertical /= 2;
+				player.movement.fastVertical /= 2;
+			}
 			player.state = (player.state === "slow") ? "normal" : "slow";
 			game.sounds.toggleTheme();
 			(player.state === "slow") ? (
 				clearInterval(game.loop),
 				game.loop = setInterval(mainFunction,game.ms*2)
-			) : ( 
+			) : (
 				clearInterval(game.loop),
 				game.loop = setInterval(mainFunction,game.ms)
 			);
