@@ -40,7 +40,7 @@ body {
 }
 
 #sprinkle-canvas {
-  grid-area: 2 / 2 / 3 / 3;
+  grid-area: 2 / 2 / 4 / 4;
   border-radius: 50px;
   background-color: #111;
 }

@@ -12,7 +12,8 @@ const game = {
 		game.active = true;
 		sprinkles.speedrange = 1;
 		sprinkles.dripFrequency = 0.07;
-		player.levels.health.level = player.levels.slow.level = player.levels.power.level = player.levels.passive.level = 0;
+		player.levels.health.level = 100;
+		player.levels.slow.level = player.levels.power.level = player.levels.passive.level = 0;
 		player.alive = true;
 		player.points = 0;
 		player.x = (sprinkles.canvas.width/2)-5;
@@ -161,20 +162,21 @@ const player = {
 	colors: { magenta: '#AE00FF', blue: '#0BF', green: '#0F2', red: ['#F11','#C00','#900','#600','#100','#600','#900','#C00','#F11','#F44','#F99','#FFF','#F99','#F44','#F11','#C00','#900','#600','#100','#600','#900','#C00','#F11','#F44','#F99'], gloom: '#0093C4', passivesky: '#5C00BF', powersky: '#228', slowsky: '#242' },
 	levels: {
 		canvas: document.getElementById("levels-canvas"),
+		max: 212.25,
 		slow: {
-			level: 0,	// max 120
+			level: 0,	// max 200
 			height: 0
 		},
 		power:  {
-			level: 0,	// max 120
+			level: 0,	// max 200
 			height: 0
 		},
 		passive:  {
-			level: 0,	// max 240
+			level: 0,	// max 400
 			height: 0
 		},
 		health:  {
-			level: 5,	// max 30,000
+			level: 100,	// max 30,000
 			height: 0,
 			drawHealthLayers(width, n, max) {
 				sprinkles.context.fillStyle = player.colors.red[n];
@@ -190,14 +192,14 @@ const player = {
 	adjustBars() {
 		if (this.state === "normal") {
 			if (this.vertical > 0 && this.y < game.waterLine) {
-				if (this.levels.slow.level < 120) {
-					this.levels.slow.level += 0.2;
-				} else if (this.levels.power.level < 120) {
-					this.levels.power.level += 0.1;
-				} else if (this.levels.passive.level < 240) {
-					this.levels.passive.level += 0.05;
+				if (this.levels.slow.level < this.levels.max) {
+					this.levels.slow.level += 0.16;
+				} else if (this.levels.power.level < this.levels.max) {
+					this.levels.power.level += 0.08;
+				} else if (this.levels.passive.level < this.levels.max * 2) {
+					this.levels.passive.level += 0.04;
 				} else {
-					sprinkles.dripFrequency -= 0.0002;
+					sprinkles.dripFrequency -= 0.000002;
 				}
 			}
 		} else {
@@ -221,7 +223,7 @@ const player = {
 					this.levels.slow.level -= 0.5;
 				} else {
 					this.state = "normal";
-					this.slow.level = 0;
+					this.levels.slow.level = 0;
 					game.sounds.toggleTheme();
 					clearInterval(game.loop);
 					game.loop = setInterval(mainFunction,game.ms);
@@ -233,19 +235,16 @@ const player = {
 	},
 	barDraw() {
 		player.adjustBars();
-		// 425 height 115 widths
-		// 425 29
 		this.levels.context.clearRect(0,0,this.levels.canvas.width,this.levels.canvas.height);
 		this.levels.context.fillStyle = "#F00";
-		this.levels.context.fillRect(0, 								this.levels.canvas.height - this.levels.health.level, 	25, 	Math.abs(this.levels.canvas.height - this.levels.health.level));
+		this.levels.context.fillRect(2, 								this.levels.canvas.height - this.levels.health.level, 	25, 	Math.abs(this.levels.canvas.height - this.levels.health.level));
 		this.levels.context.fillStyle = player.colors.green;
-		this.levels.context.fillRect(0.25 * this.levels.canvas.width, 	this.levels.canvas.height - this.levels.slow.level, 	25, 	Math.abs(this.levels.canvas.height - this.levels.slow.level));
+		this.levels.context.fillRect(2+0.25 * this.levels.canvas.width, 	this.levels.canvas.height - (this.levels.slow.level * 2), 	25, 	(Math.abs(this.levels.canvas.height - this.levels.slow.level) * 2));
 		this.levels.context.fillStyle = player.colors.blue;
-		this.levels.context.fillRect(0.5 * this.levels.canvas.width, 	this.levels.canvas.height - this.levels.power.level, 	25, 	Math.abs(this.levels.canvas.height - this.levels.power.level));
+		this.levels.context.fillRect(2+0.5 * this.levels.canvas.width, 	this.levels.canvas.height - (this.levels.power.level * 2), 	25, 	(Math.abs(this.levels.canvas.height - this.levels.power.level) * 2));
 		this.levels.context.fillStyle = player.colors.magenta;
-		this.levels.context.fillRect(0.75 * this.levels.canvas.width, 	this.levels.canvas.height - this.levels.passive.level, 	25, 	Math.abs(this.levels.canvas.height - this.levels.passive.level));
-		
-		//player.health.drawLayers(player.health.width, 0, 240);
+		this.levels.context.fillRect(2+0.75 * this.levels.canvas.width, 	this.levels.canvas.height - this.levels.passive.level, 	25, 		(Math.abs(this.levels.canvas.height - this.levels.power.level) * 2));
+		//this.levels.health.drawLayers(player.health.width, 0, 240);
 	},
 	safeCheck() {
 		if (player.y + player.size < game.cloudThickness) player.levelup();
@@ -255,7 +254,6 @@ const player = {
 		this.points += 100;
 		this.y = sprinkles.canvas.height * 0.92;
 		if (this.state != "normal") {
-			this.state = "normal";
 			if (this.state === "power") {
 				this.fastvertical /= 2;
 				this.vertical /= 2;
@@ -265,6 +263,7 @@ const player = {
 				clearInterval(game.loop);
 				game.loop = setInterval(mainFunction,game.ms);
 			}
+			this.state = "normal";
 		}
 		if (sprinkles.speedrange <= 4.9) sprinkles.speedrange += 0.1;
 		if (sprinkles.dripFrequency < .25) sprinkles.dripFrequency += 0.005;
@@ -277,7 +276,7 @@ const player = {
 			this.y -= this.vertical;
 			this.draw();	
 		} else {
-			this.y -= this.vertical
+			if (this.y < sprinkles.canvas.height) this.y += 3;
 			this.draw();
 		}
 	},
@@ -303,12 +302,12 @@ const player = {
 					if (this.levels.health.level <= 0) {
 						this.levels.health.level = 0;
 						this.alive = false;
+						this.score.children[1].innerHTML = "You Died";
 						if (this.state === "slow") {
 							this.state = "normal;"
 							game.sounds.toggleTheme();
 						}
 						if (this.state === "passive") this.state = "normal";
-						this.vertical = -3;
 						return false;
 					} else {
 						this.y += sprinkles.impactForce();
@@ -337,7 +336,7 @@ const player = {
 	score: document.getElementById("score-box"),
 	updateStats() {
 		this.score.children[0].innerHTML = `PTS : ${this.points}`;
-		this.score.children[1].innerHTML = `HP : ${this.levels.health.level}`;
+		this.score.children[1].innerHTML = `HP : ${this.levels.health.level.toFixed(0)}`;
 	}
 }
 
@@ -351,7 +350,7 @@ player.draw = function() {
 document.addEventListener("keydown",pushedKey);
 document.addEventListener("keyup",releasedKey);
 
-function pushedKey(btn) {
+function pushedKey(btn) {// 90 z, 88 x, 67 c
 	if (btn.keyCode === 32) game.pauseUnpause(); // space
 	if (btn.keyCode === 82) game.reset();  // R
 	if (player.alive) {
@@ -364,7 +363,7 @@ function pushedKey(btn) {
 			player.levels.passive.level -= 50;
 			setTimeout(() => player.state = "normal", 4000);
 		}
-		if (btn.keyCode === 67 && player.levels.power.level > 50 && player.y < game.waterLine && game.active) { // C key
+		if (btn.keyCode === 67 && player.levels.power.level > 5 && player.y < game.waterLine && game.active) { // C key
 			player.state = (player.state === "power") ? "normal" : "power";
 			(player.state === "power") ? (
 				player.vertical *= 2,
@@ -374,7 +373,7 @@ function pushedKey(btn) {
 				player.fastvertical /= 2
 			);
 		}
-		if (btn.keyCode === 83 && player.levels.slow.level > 50 && player.y < game.waterLine && game.active) { // S key
+		if (btn.keyCode === 83 && player.levels.slow.level > 5 && player.y < game.waterLine && game.active) { // S key
 			player.state = (player.state === "slow") ? "normal" : "slow";
 			game.sounds.toggleTheme();
 			(player.state === "slow") ? (
