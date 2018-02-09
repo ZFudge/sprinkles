@@ -12,12 +12,12 @@ const game = {
 		notecounter: 1,
 		normal: [ new Audio('audio/normal/D.mp3'), new Audio('audio/normal/G.mp3'), new Audio('audio/normal/D_.mp3'), new Audio('audio/normal/C.mp3'), new Audio('audio/normal/D_2.mp3'), new Audio('audio/normal/G2.mp3'), new Audio('audio/normal/D2.mp3'), new Audio('audio/normal/A_.mp3') ],
 		power: [ new Audio('audio/power/D.mp3'), new Audio('audio/power/G.mp3'), new Audio('audio/power/DS.mp3'), new Audio('audio/power/C.mp3'), new Audio('audio/power/DS2.mp3'), new Audio('audio/power/G2.mp3'), new Audio('audio/power/D2.mp3'), new Audio('audio/power/AS.mp3') ],
-		slow: [ new Audio("audio/slow/D.wav"), new Audio("audio/slow/G.wav"), new Audio("audio/slow/D_2.wav"), new Audio("audio/slow/C.wav"), new Audio("audio/slow/D_2.wav"), new Audio("audio/slow/G.wav"), new Audio("audio/slow/D.wav"), new Audio("audio/slow/A_.wav") ],
-		theme: new Audio('audio/normal/normal_theme.wav'),
-		normalTheme: new Audio('audio/normal/normal_theme.wav'),
+		slow: [ new Audio("audio/slow/D.mp3"), new Audio("audio/slow/G.mp3"), new Audio("audio/slow/D_2.mp3"), new Audio("audio/slow/C.mp3"), new Audio("audio/slow/D_2.mp3"), new Audio("audio/slow/G.mp3"), new Audio("audio/slow/D.mp3"), new Audio("audio/slow/A_.mp3") ],
+		theme: new Audio('audio/normal/normal_theme.mp3'),
+		normalTheme: new Audio('audio/normal/normal_theme.mp3'),
 		slowTheme: new Audio('audio/slow/slow_theme.mp3'),
 		powerTheme: new Audio("audio/power/power_theme.mp3"),
-		passiveTheme: new Audio("audio/passive_theme.wav"),
+		passiveTheme: new Audio("audio/passive_theme.mp3"),
 		soundlooper() {
 			(this.theme.muted) ? null : (player.state === "power" || player.state === "passive") ? this.power[this.notecounter].play() : (player.state === "slow") ? this.slow[this.notecounter].play() : this.normal[this.notecounter].play();
 			(game.sounds.notecounter < 7) ? this.notecounter++ : this.notecounter = 0;
