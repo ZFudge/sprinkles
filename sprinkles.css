@@ -107,10 +107,13 @@ button:active {
 
 #sound {
   width: 25px;
-  background-color: #FFF;
+  background-color: transparent;
   grid-column-start: 7;
   border-left: 2px solid #ddd;
   border-top: 2px solid #ddd;
   border-right: 2px solid #898989;
   border-bottom: 2px solid #898989;  
+  background-image: url("mute.png");
+  outline: none;
+  background-position: 35% 35%; 
 }

@@ -54,7 +54,9 @@ const game = {
 		}
 	},
 	buttons: {
-		reset: document.getElementById("reset")
+		reset: document.getElementById("reset"),
+		sound: document.getElementById("sound"),
+		countrols: document.getElementById("show-controls")
 	},
 	drawSky() {
 		(player.state === "passive") ? sprinkles.context.fillStyle = player.colors.passivesky : (player.state === "power") ? sprinkles.context.fillStyle = player.colors.powersky : (player.state === "slow") ? sprinkles.context.fillStyle = player.colors.slowsky : sprinkles.context.fillStyle = player.colors.gloom;
@@ -77,7 +79,13 @@ const game = {
 		}
 	},
 	soundToggle() {
-		(this.sounds.theme.muted) ? this.sounds.theme.muted = false : this.sounds.theme.muted = true;
+		if (this.sounds.theme.muted) {
+			this.sounds.theme.muted = false;
+			this.buttons,sound.style.backgroundImage = "url('mute.png')";
+		} else {
+			this.sounds.theme.muted = true;
+			this.buttons,sound.style.backgroundImage = "url('unmute.png')";
+		}
 	}
 }
 
