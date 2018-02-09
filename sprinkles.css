@@ -36,13 +36,18 @@ body {
 #control-container {
   grid-area: 4 / 2 / 5 / 4;
   display: grid;
-  grid-template-columns: 115px 20px 115px 25px 115px;
+  grid-template-columns: 115px 20px 115px 25px 65px 25px;
 }
 
-#sprinkle-canvas {
-  grid-area: 2 / 2 / 4 / 4;
+#sprinkle-canvas, #menu {
+  transition-duration: 0.25s;
+  grid-area: 2 / 2 / 4 / 3;
   border-radius: 35px;
   background-color: #111;
+}
+#menu {
+  opacity: 0;
+  background-color: #FFF;
 }
 
 #score-box {
@@ -100,6 +105,12 @@ button:active {
   box-shadow: 0 1px 3px 0 #33333399;
 }
 
-#menu {
-  display: none;
+#sound {
+  width: 25px;
+  background-color: #C22;
+  grid-column-start: 7;
+  border-left: 2px solid #ddd;
+  border-top: 2px solid #ddd;
+  border-right: 2px solid #898989;
+  border-bottom: 2px solid #898989;  
 }
