@@ -1,5 +1,5 @@
 const game = {
-	active: true,
+	active: false,
 	ms: 30, // milliseconds in each interval
 	waterShade: 40, // sets shade of blue
 	waterRise: true,
@@ -8,6 +8,10 @@ const game = {
 		if (game.waterShade >= 88 || game.waterShade <= 40) game.waterRise = !game.waterRise;
 	},
 	reset() {
+		if (!this.active) {
+			this.loop = setInterval(mainFunction,this.ms);
+			this.sounds.theme.play();
+		}
 		this.active = true;
 		this.sounds.theme.currentTime = 0;
 		sprinkles.drops = [];
@@ -172,7 +176,6 @@ const sprinkles = {
 sprinkles.context = sprinkles.canvas.getContext('2d');
 game.cloudThickness = 100;
 game.waterLine = sprinkles.canvas.height - 100;
-game.loop = setInterval(mainFunction,game.ms);
 
 const player = {
 	state: "normal",
@@ -376,39 +379,13 @@ document.addEventListener("keydown",pushedKey);
 document.addEventListener("keyup",releasedKey);
 
 function pushedKey(btn) {// 90 z, 88 x, 67 c
-	if (btn.keyCode === 32) game.pauseUnpause(); // space
+	if (btn.keyCode === 80) game.pauseUnpause(); // space
 	if (btn.keyCode === 82) game.reset();  // R
 	if (player.alive) {
 		if (btn.keyCode === 37 && player.movement.horizontal > -2) player.movement.horizontal = -2;
 		if (btn.keyCode === 39 && player.movement.horizontal < 2) player.movement.horizontal = 2;
 		if (btn.keyCode === 38) player.movement.vertical = player.movement.fastVertical;
 		if (btn.keyCode === 40) player.movement.vertical = 0;
-		if (btn.keyCode === 65 && player.state != "passive" && player.levels.passive.level >= 50) {
-			if (player.state === "slow") {
-				clearInterval(game.loop),
-				game.loop = setInterval(mainFunction,game.ms)
-			} else if (player.state === "power") {
-				player.movement.vertical /= 2;
-				player.movement.fastVertical /= 2;
-			}
-			player.state = "passive";
-			player.levels.passive.level -= 50;
-			setTimeout(() => player.state = "normal", 4000);
-		}
-		if (btn.keyCode === 67 && player.levels.power.level > 5 && player.movement.y < game.waterLine && game.active && player.state !== "passive") { // C key
-			if (player.state === "slow") {
-				clearInterval(game.loop),
-				game.loop = setInterval(mainFunction,game.ms)
-			}
-			player.state = (player.state === "power") ? "normal" : "power";
-			if (player.state === "power") {
-				player.movement.vertical *= 2;
-				player.movement.fastVertical *= 2;
-			} else {
-				player.movement.vertical /= 2;
-				player.movement.fastVertical /= 2;
-			}
-		}
 		if (btn.keyCode === 83 && player.levels.slow.level > 5 && player.movement.y < game.waterLine && game.active && player.state !== "passive") { // S key
 			if (player.state === "power") {
 				player.movement.vertical /= 2;
@@ -424,6 +401,32 @@ function pushedKey(btn) {// 90 z, 88 x, 67 c
 				game.loop = setInterval(mainFunction,game.ms)
 			);
 		}	
+		if (btn.keyCode === 68 && player.levels.power.level > 5 && player.movement.y < game.waterLine && game.active && player.state !== "passive") { // D key
+			if (player.state === "slow") {
+				clearInterval(game.loop),
+				game.loop = setInterval(mainFunction,game.ms)
+			}
+			player.state = (player.state === "power") ? "normal" : "power";
+			if (player.state === "power") {
+				player.movement.vertical *= 2;
+				player.movement.fastVertical *= 2;
+			} else {
+				player.movement.vertical /= 2;
+				player.movement.fastVertical /= 2;
+			}
+		}
+		if (btn.keyCode === 70 && player.state != "passive" && player.levels.passive.level >= 50) { // F Key Passive
+			if (player.state === "slow") {
+				clearInterval(game.loop),
+				game.loop = setInterval(mainFunction,game.ms)
+			} else if (player.state === "power") {
+				player.movement.vertical /= 2;
+				player.movement.fastVertical /= 2;
+			}
+			player.state = "passive";
+			player.levels.passive.level -= 50;
+			setTimeout(() => player.state = "normal", 4000);
+		}
 	}
 }
 
@@ -444,5 +447,4 @@ sprinkles.canvas.addEventListener('mouseup',releaseCoor);
 window.addEventListener("load",function() {
 	game.sounds.theme.volume = 0.7;
 	game.sounds.theme.loop = true;
-	game.sounds.toggleTheme();
 });
