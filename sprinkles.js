@@ -1,4 +1,5 @@
 const game = {
+	on: false,
 	active: false,
 	ms: 30, // milliseconds in each interval
 	waterShade: 40, // sets shade of blue
@@ -8,6 +9,7 @@ const game = {
 		if (game.waterShade >= 88 || game.waterShade <= 40) game.waterRise = !game.waterRise;
 	},
 	reset() {
+		this.on = true;
 		if (!this.active) {
 			this.loop = setInterval(mainFunction,this.ms);
 			this.sounds.theme.play();
@@ -28,12 +30,13 @@ const game = {
 		player.movement.speed = 3;
 	},
 	pauseUnpause() {
-		game.active = !game.active;
-		if (game.active) {
-			game.loop = setInterval(mainFunction,game.ms);
+		this.on = true;
+		this.active = !this.active;
+		if (this.active) {
+			this.loop = setInterval(mainFunction,this.ms);
 			this.sounds.theme.play();
 		} else {
-			clearInterval(game.loop);
+			clearInterval(this.loop);
 			this.sounds.theme.pause();
 		}
 	},
@@ -43,7 +46,7 @@ const game = {
 		power: [ new Audio('audio/power/D.mp3'), new Audio('audio/power/G.mp3'), new Audio('audio/power/DS.mp3'), new Audio('audio/power/C.mp3'), new Audio('audio/power/DS2.mp3'), new Audio('audio/power/G2.mp3'), new Audio('audio/power/D2.mp3'), new Audio('audio/power/AS.mp3') ],
 		theme: new Audio('audio/normal/sprinkles_2.mp3'),
 		slowTheme: new Audio('audio/normal/slow_theme.mp3'),
-		toggleTheme() {
+		updateThemeSpeed() {
 			if (player.state === "slow") {
 				game.sounds.theme.pause();
 				game.sounds.slowTheme.play();
@@ -60,7 +63,16 @@ const game = {
 	buttons: {
 		reset: document.getElementById("reset"),
 		sound: document.getElementById("sound"),
-		countrols: document.getElementById("show-controls")
+		countrols: document.getElementById("show-controls"),
+		soundImageToggle() {
+			if (game.sounds.theme.muted) {
+				game.sounds.theme.muted = false;
+				this.sound.style.backgroundImage = "url('mute.png')";
+			} else {
+				game.sounds.theme.muted = true;
+				this.sound.style.backgroundImage = "url('unmute.png')";
+			}
+		}
 	},
 	drawSky() {
 		(player.state === "passive") ? sprinkles.context.fillStyle = player.colors.passivesky : (player.state === "power") ? sprinkles.context.fillStyle = player.colors.powersky : (player.state === "slow") ? sprinkles.context.fillStyle = player.colors.slowsky : sprinkles.context.fillStyle = player.colors.gloom;
@@ -80,15 +92,6 @@ const game = {
 		} else {
 			document.getElementById('sprinkle-canvas').style.opacity = 0;
 			document.getElementById('menu').style.opacity = 1;
-		}
-	},
-	soundToggle() {
-		if (this.sounds.theme.muted) {
-			this.sounds.theme.muted = false;
-			this.buttons,sound.style.backgroundImage = "url('mute.png')";
-		} else {
-			this.sounds.theme.muted = true;
-			this.buttons,sound.style.backgroundImage = "url('unmute.png')";
 		}
 	}
 }
@@ -249,11 +252,11 @@ const player = {
 				if (this.levels.slow.level > 0) {
 					this.levels.slow.level -= 0.75;
 				} else {
+					game.sounds.updateThemeSpeed(); // before state change
 					this.state = "normal";
 					this.levels.slow.level = 0;
 					clearInterval(game.loop);
 					game.loop = setInterval(mainFunction,game.ms);
-					game.sounds.toggleTheme();
 				}
 			} else {
 				alert("Error: player state is " + this.state);
@@ -285,7 +288,7 @@ const player = {
 				this.movement.vertical /= 2;
 			}
 			if (this.state === "slow") {
-				game.sounds.toggleTheme();
+				game.sounds.updateThemeSpeed();
 				clearInterval(game.loop);
 				game.loop = setInterval(mainFunction,game.ms);
 			}
@@ -332,8 +335,8 @@ const player = {
 						this.barDraw();
 						this.score.children[1].innerHTML = "You Died";
 						if (this.state === "slow") {
+							game.sounds.updateThemeSpeed(); // before state change
 							this.state = "normal;"
-							game.sounds.toggleTheme();
 						}
 						if (this.state === "passive") this.state = "normal";
 						return false;
@@ -379,20 +382,20 @@ document.addEventListener("keydown",pushedKey);
 document.addEventListener("keyup",releasedKey);
 
 function pushedKey(btn) {// 90 z, 88 x, 67 c
-	if (btn.keyCode === 80) game.pauseUnpause(); // space
+	if (btn.keyCode === 65) game.pauseUnpause(); // space
 	if (btn.keyCode === 82) game.reset();  // R
 	if (player.alive) {
 		if (btn.keyCode === 37 && player.movement.horizontal > -2) player.movement.horizontal = -2;
 		if (btn.keyCode === 39 && player.movement.horizontal < 2) player.movement.horizontal = 2;
 		if (btn.keyCode === 38) player.movement.vertical = player.movement.fastVertical;
 		if (btn.keyCode === 40) player.movement.vertical = 0;
-		if (btn.keyCode === 83 && player.levels.slow.level > 5 && player.movement.y < game.waterLine && game.active && player.state !== "passive") { // S key
+		if (btn.keyCode === 83 && player.levels.slow.level > 5 && player.movement.y < game.waterLine && game.active && player.state !== "passive") { // S key Slow
 			if (player.state === "power") {
 				player.movement.vertical /= 2;
 				player.movement.fastVertical /= 2;
 			}
 			player.state = (player.state === "slow") ? "normal" : "slow";
-			game.sounds.toggleTheme();
+			game.sounds.updateThemeSpeed();  // after state assignment ^
 			(player.state === "slow") ? (
 				clearInterval(game.loop),
 				game.loop = setInterval(mainFunction,game.ms*2)
@@ -401,12 +404,13 @@ function pushedKey(btn) {// 90 z, 88 x, 67 c
 				game.loop = setInterval(mainFunction,game.ms)
 			);
 		}	
-		if (btn.keyCode === 68 && player.levels.power.level > 5 && player.movement.y < game.waterLine && game.active && player.state !== "passive") { // D key
+		if (btn.keyCode === 68 && player.levels.power.level > 5 && player.movement.y < game.waterLine && game.active && player.state !== "passive") { // D key Power
 			if (player.state === "slow") {
 				clearInterval(game.loop),
 				game.loop = setInterval(mainFunction,game.ms)
 			}
 			player.state = (player.state === "power") ? "normal" : "power";
+			game.sounds.updateThemeSpeed();
 			if (player.state === "power") {
 				player.movement.vertical *= 2;
 				player.movement.fastVertical *= 2;
@@ -427,6 +431,10 @@ function pushedKey(btn) {// 90 z, 88 x, 67 c
 			player.levels.passive.level -= 50;
 			setTimeout(() => player.state = "normal", 4000);
 		}
+	}
+	if (!game.on) {
+		game.pauseUnpause();
+		game.on = true;
 	}
 }
 
