@@ -12,13 +12,14 @@ const game = {
 		notecounter: 1,
 		normal: [ new Audio('audio/normal/D.mp3'), new Audio('audio/normal/G.mp3'), new Audio('audio/normal/D_.mp3'), new Audio('audio/normal/C.mp3'), new Audio('audio/normal/D_2.mp3'), new Audio('audio/normal/G2.mp3'), new Audio('audio/normal/D2.mp3'), new Audio('audio/normal/A_.mp3') ],
 		power: [ new Audio('audio/power/D.mp3'), new Audio('audio/power/G.mp3'), new Audio('audio/power/DS.mp3'), new Audio('audio/power/C.mp3'), new Audio('audio/power/DS2.mp3'), new Audio('audio/power/G2.mp3'), new Audio('audio/power/D2.mp3'), new Audio('audio/power/AS.mp3') ],
+		slow: [ new Audio("audio/slow/D.wav"), new Audio("audio/slow/G.wav"), new Audio("audio/slow/D_2.wav"), new Audio("audio/slow/C.wav"), new Audio("audio/slow/D_2.wav"), new Audio("audio/slow/G.wav"), new Audio("audio/slow/D.wav"), new Audio("audio/slow/A_.wav") ],
 		theme: new Audio('audio/normal/normal_theme.wav'),
 		normalTheme: new Audio('audio/normal/normal_theme.wav'),
 		slowTheme: new Audio('audio/slow/slow_theme.mp3'),
 		powerTheme: new Audio("audio/power/power_theme.mp3"),
 		passiveTheme: new Audio("audio/passive_theme.wav"),
 		soundlooper() {
-			(this.theme.muted) ? null : (player.state === "power") ? this.power[this.notecounter].play() : this.normal[this.notecounter].play();
+			(this.theme.muted) ? null : (player.state === "power" || player.state === "passive") ? this.power[this.notecounter].play() : (player.state === "slow") ? this.slow[this.notecounter].play() : this.normal[this.notecounter].play();
 			(game.sounds.notecounter < 7) ? this.notecounter++ : this.notecounter = 0;
 		}
 	},
@@ -92,6 +93,12 @@ const game = {
 		if (!this.active) {
 			this.loop = setInterval(mainFunction,this.ms);
 			this.sounds.theme.play();
+			if (sprinkles.canvas.style.opacity === "0") {
+				sprinkles.canvas.style.opacity = 1;
+				player.score.style.opacity = 1;
+				player.levels.canvas.style.opacity = 1;
+				document.getElementById('menu').style.opacity = 0;
+			}
 		}
 		this.active = true;
 		this.sounds.theme.currentTime = 0;
@@ -348,9 +355,9 @@ const player = {
 			if ( ((playDwn >= dropUp && playDwn <= dropDwn && playLft >= dropLft && playLft <= dropRgt) || (playDwn >= dropUp && playDwn <= dropDwn && playRgt >= dropLft && playRgt <= dropRgt) || (playUp >= dropUp && playUp <= dropDwn && playLft >= dropLft && playLft <= dropRgt) 
 					|| (dropDwn >= playUp && dropDwn <= playDwn && dropLft >= playLft && dropLft <= playRgt) || (dropDwn >= playUp && dropDwn <= playDwn && dropRgt >= playLft && dropRgt <= playRgt) || (dropUp >= playUp && dropUp <= playDwn && dropLft >= playLft && dropLft <= playRgt)) && dropDwn < game.waterLine && dropDwn > game.cloudThickness) {
 				game.sounds.soundlooper();
-				if (this.state === "power") {
-					this.levels.health.level += 10; // 4 : 1 
-					this.levels.power.level -= 5;
+				if (this.state === "power" || this.state === "passive") {
+					if (this.state === "power") this.levels.power.level -= 5;
+					this.levels.health.level += (this.state === "power") ? 10 : 100; // 4 : 1 
 					this.points += 200;
 					this.movement.y -= Math.ceil(Math.random() * 5 + 5);
 				} else {
