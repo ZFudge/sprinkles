@@ -8,8 +8,9 @@ const game = {
 		if (game.waterShade >= 88 || game.waterShade <= 40) game.waterRise = !game.waterRise;
 	},
 	reset() {
+		this.active = true;
+		this.sounds.theme.currentTime = 0;
 		sprinkles.drops = [];
-		game.active = true;
 		sprinkles.speedRange = 1;
 		sprinkles.dripFrequency = 0.07;
 		player.levels.health.level = player.levels.health.height = 100;
@@ -23,7 +24,13 @@ const game = {
 		player.movement.speed = 3;
 	},
 	pauseUnpause() {
-		(game.active) ? clearInterval(game.loop) : game.loop = setInterval(mainFunction,game.ms);
+		if (game.active) {
+			clearInterval(game.loop);
+			this.sounds.theme.pause();
+		} else {
+			game.loop = setInterval(mainFunction,game.ms);
+			this.sounds.theme.play();
+		}
 		game.active = !game.active;
 	},
 	sounds: {
@@ -59,7 +66,20 @@ const game = {
 		sprinkles.context.fillRect(0, game.waterLine, sprinkles.canvas.width, sprinkles.canvas.height);
 		game.waterAdjust();
 	},
-	t: false
+	controls: false,
+	showControls() {
+		this.controls = !this.controls;
+		if (this.controls) {
+			document.getElementById('sprinkle-canvas').style.opacity = 0;
+			document.getElementById('menu').style.opacity = 1;
+		} else {
+			document.getElementById('sprinkle-canvas').style.opacity = 1;
+			document.getElementById('menu').style.opacity = 0;
+		}
+	},
+	soundToggle() {
+		(this.sounds.theme.muted) ? this.sounds.theme.muted = false : this.sounds.theme.muted = true;
+	}
 }
 
 function mainFunction() {
