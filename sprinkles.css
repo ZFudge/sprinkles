@@ -39,15 +39,21 @@ body {
   grid-template-columns: 115px 20px 115px 25px 65px 25px;
 }
 
+#sprinkle-canvas {
+  grid-area: 2 / 2 / 4 / 3;
+}
+
 #sprinkle-canvas, #menu {
   transition-duration: 0.25s;
-  grid-area: 2 / 2 / 4 / 3;
   border-radius: 35px;
   background-color: #111;
 }
 #menu {
   opacity: 0;
   background-color: #FFF;
+  overflow-y: scroll;
+  z-index: 0;
+  grid-area: 2 / 2 / 4 / 4;
 }
 
 #score-box {
