@@ -102,12 +102,12 @@ button:active {
   border-top: 2px solid #666;
   border: 2px solid #333;
   border-bottom: none;
-  box-shadow: 0 1px 3px 0 #33333399;
+  box-shadow: 0 2px 3px 0 #33333399;
 }
 
 #sound {
   width: 25px;
-  background-color: #C22;
+  background-color: #FFF;
   grid-column-start: 7;
   border-left: 2px solid #ddd;
   border-top: 2px solid #ddd;

@@ -24,14 +24,14 @@ const game = {
 		player.movement.speed = 3;
 	},
 	pauseUnpause() {
+		game.active = !game.active;
 		if (game.active) {
-			clearInterval(game.loop);
-			this.sounds.theme.pause();
-		} else {
 			game.loop = setInterval(mainFunction,game.ms);
 			this.sounds.theme.play();
+		} else {
+			clearInterval(game.loop);
+			this.sounds.theme.pause();
 		}
-		game.active = !game.active;
 	},
 	sounds: {
 		notecounter: 1,
@@ -66,15 +66,14 @@ const game = {
 		sprinkles.context.fillRect(0, game.waterLine, sprinkles.canvas.width, sprinkles.canvas.height);
 		game.waterAdjust();
 	},
-	controls: false,
 	showControls() {
-		this.controls = !this.controls;
-		if (this.controls) {
-			document.getElementById('sprinkle-canvas').style.opacity = 0;
-			document.getElementById('menu').style.opacity = 1;
-		} else {
+		this.pauseUnpause();
+		if (this.active) {
 			document.getElementById('sprinkle-canvas').style.opacity = 1;
 			document.getElementById('menu').style.opacity = 0;
+		} else {
+			document.getElementById('sprinkle-canvas').style.opacity = 0;
+			document.getElementById('menu').style.opacity = 1;
 		}
 	},
 	soundToggle() {
