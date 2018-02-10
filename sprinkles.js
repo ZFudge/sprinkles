@@ -10,14 +10,13 @@ const game = {
 	},
 	sounds: {
 		notecounter: 1,
-		normal: [ new Audio('audio/normal/D.mp3'), new Audio('audio/normal/G.mp3'), new Audio('audio/normal/D_.mp3'), new Audio('audio/normal/C.mp3'), new Audio('audio/normal/D_2.mp3'), new Audio('audio/normal/G2.mp3'), new Audio('audio/normal/D2.mp3'), new Audio('audio/normal/A_.mp3') ],
-		power: [ new Audio('audio/power/D.mp3'), new Audio('audio/power/G.mp3'), new Audio('audio/power/DS.mp3'), new Audio('audio/power/C.mp3'), new Audio('audio/power/DS2.mp3'), new Audio('audio/power/G2.mp3'), new Audio('audio/power/D2.mp3'), new Audio('audio/power/AS.mp3') ],
-		slow: [ new Audio("audio/slow/D.mp3"), new Audio("audio/slow/G.mp3"), new Audio("audio/slow/D_2.mp3"), new Audio("audio/slow/C.mp3"), new Audio("audio/slow/D_2.mp3"), new Audio("audio/slow/G.mp3"), new Audio("audio/slow/D.mp3"), new Audio("audio/slow/A_.mp3") ],
-		theme: new Audio('audio/normal/normal_theme.mp3'),
-		normalTheme: new Audio('audio/normal/normal_theme.mp3'),
-		slowTheme: new Audio('audio/slow/slow_theme.mp3'),
-		powerTheme: new Audio("audio/power/power_theme.mp3"),
-		passiveTheme: new Audio("audio/passive_theme.mp3"),
+		normal: [],
+		power: [],
+		slow: [],
+		normalTheme: new Audio(""),
+		slowTheme: new Audio(""),
+		powerTheme: new Audio(""),
+		passiveTheme: new Audio(""),
 		soundlooper() {
 			(this.theme.muted) ? null : (player.state === "power" || player.state === "passive") ? this.power[this.notecounter].play() : (player.state === "slow") ? this.slow[this.notecounter].play() : this.normal[this.notecounter].play();
 			(game.sounds.notecounter < 7) ? this.notecounter++ : this.notecounter = 0;
@@ -114,6 +113,10 @@ const game = {
 		player.movement.horizontal = 0;
 		player.movement.vertical = 1;
 		player.movement.speed = 3;
+	},
+	setSpeed(ms) {
+		clearInterval(this.loop);
+		this.loop = setInterval(mainFunction, ms);
 	}
 }
 
@@ -205,6 +208,8 @@ const player = {
 	state: "normal",
 	score: document.getElementById("score-box"),
 	setState(status) {
+		game.sounds.theme.pause();
+		game.sounds.theme.currentTime;
 		if (this.state === "power") {
 			this.movement.vertical /= 2;
 			this.movement.fastVertical /= 2;
@@ -214,11 +219,10 @@ const player = {
 		}
 		this.state = status;
 		const mute = game.sounds.theme.muted;
-		game.sounds.theme.pause();
-		game.sounds.theme.src = (status === "normal") ? game.sounds.normalTheme.src : 
-			(status === "slow") ? game.sounds.slowTheme.src : 
-				(status === "power") ? game.sounds.powerTheme.src : 
-					(status === "passive") ? game.sounds.passiveTheme.src : null;
+		game.sounds.theme = (status === "normal") ? game.sounds.normalTheme : 
+			(status === "slow") ? game.sounds.slowTheme : 
+				(status === "power") ? game.sounds.powerTheme : 
+					(status === "passive") ? game.sounds.passiveTheme : null;
 		if (!mute) game.sounds.theme.play();
 	},
 	alive: true,
@@ -262,7 +266,7 @@ const player = {
 	},
 	adjustBars() {
 		if (Math.abs(this.levels.health.height - this.levels.health.level) > 3) (this.levels.health.height > this.levels.health.level) ? this.levels.health.height -= 3 : this.levels.health.height += 3;
-		if (Math.abs(this.levels.passive.height - this.levels.passive.level) > 0.5) (this.levels.passive.height > this.levels.passive.level) ? this.levels.passive.height -= 2 : this.levels.passive.height += 2; // because passive level only drops in high amounts
+		if (Math.abs(this.levels.passive.height - this.levels.passive.level) > 1) (this.levels.passive.height > this.levels.passive.level) ? this.levels.passive.height -= 2 : this.levels.passive.height += 2; // because passive level only drops in high amounts
 		if (this.state === "normal") {
 			if (this.movement.vertical > 0 && this.movement.y < game.waterLine) {
 				if (this.levels.slow.level < this.levels.max) {
@@ -289,8 +293,7 @@ const player = {
 				if (this.levels.slow.level < 0) {
 					this.setState("normal");
 					this.levels.slow.level = 0;
-					clearInterval(game.loop);
-					game.loop = setInterval(mainFunction,game.ms);
+					game.setSpeed(game.ms);
 				} else {
 					this.levels.slow.level -= 0.75;
 				}
@@ -322,8 +325,7 @@ const player = {
 			if (this.state === "power") {
 			}
 			if (this.state === "slow") {
-				clearInterval(game.loop);
-				game.loop = setInterval(mainFunction,game.ms);
+				game.setSpeed(game.ms);
 			}
 			this.setState("normal");
 		}
@@ -420,26 +422,14 @@ function pushedKey(btn) {// 90 z, 88 x, 67 c
 		if (btn.keyCode === 40) player.movement.vertical = 0;
 		if (btn.keyCode === 83 && player.levels.slow.level > 5 && player.movement.y < game.waterLine && game.active && player.state !== "passive") { // S key Slow
 			(player.state === "slow") ? player.setState("normal") : player.setState("slow");
-			(player.state === "slow") ? (
-				clearInterval(game.loop),
-				game.loop = setInterval(mainFunction,game.ms*2)
-			) : (
-				clearInterval(game.loop),
-				game.loop = setInterval(mainFunction,game.ms)
-			);
+			(player.state === "slow") ? game.setSpeed(game.ms * 2) : game.setSpeed(game.ms);
 		}	
 		if (btn.keyCode === 68 && player.levels.power.level > 5 && player.movement.y < game.waterLine && game.active && player.state !== "passive") { // D key Power
-			if (player.state === "slow") {
-				clearInterval(game.loop),
-				game.loop = setInterval(mainFunction,game.ms)
-			}
+			if (player.state === "slow") game.setSpeed(game.ms);
 			(player.state === "power") ? player.setState("normal") : player.setState("power");
 		}
 		if (btn.keyCode === 70 && player.state != "passive" && player.levels.passive.level >= 50) { // F Key Passive
-			if (player.state === "slow") {
-				clearInterval(game.loop),
-				game.loop = setInterval(mainFunction,game.ms)
-			}
+			if (player.state === "slow") game.setSpeed(game.ms)
 			player.setState("passive");
 			player.levels.passive.level -= 50;
 			setTimeout(() => player.setState("normal"), 4000);
@@ -466,6 +456,21 @@ sprinkles.canvas.addEventListener('mousedown',pushCoor);
 sprinkles.canvas.addEventListener('mouseup',releaseCoor);
 
 window.addEventListener("load",function() {
+	game.sounds.normalTheme.src = "audio/normal/normal_theme.mp3",
+	game.sounds.slowTheme.src = "audio/slow/slow_theme.mp3",
+	game.sounds.powerTheme.src = "audio/power/power_theme.mp3",
+	game.sounds.passiveTheme.src = "audio/passive_theme.mp3",
+	game.sounds.theme = game.sounds.normalTheme;
 	game.sounds.theme.volume = 0.7;
 	game.sounds.theme.loop = true;
+	game.sounds.normal = [ new Audio('audio/normal/D.mp3'), new Audio('audio/normal/G.mp3'), new Audio('audio/normal/D_.mp3'), new Audio('audio/normal/C.mp3'), new Audio('audio/normal/D_2.mp3'), new Audio('audio/normal/G2.mp3'), new Audio('audio/normal/D2.mp3'), new Audio('audio/normal/A_.mp3') ];
+	game.sounds.power = [ new Audio('audio/power/D.mp3'), new Audio('audio/power/G.mp3'), new Audio('audio/power/DS.mp3'), new Audio('audio/power/C.mp3'), new Audio('audio/power/DS2.mp3'), new Audio('audio/power/G2.mp3'), new Audio('audio/power/D2.mp3'), new Audio('audio/power/AS.mp3') ];
+	game.sounds.slow = [ new Audio("audio/slow/D.mp3"), new Audio("audio/slow/G.mp3"), new Audio("audio/slow/D_2.mp3"), new Audio("audio/slow/C.mp3"), new Audio("audio/slow/D_2.mp3"), new Audio("audio/slow/G.mp3"), new Audio("audio/slow/D.mp3"), new Audio("audio/slow/A_.mp3") ];
+	assignLoopability([game.sounds.normalTheme, game.sounds.slowTheme, game.sounds.powerTheme, game.sounds.passiveTheme]);
 });
+
+function assignLoopability(arr) {
+	arr.forEach(function(sound) {
+		sound.loop = true;
+	});
+}
