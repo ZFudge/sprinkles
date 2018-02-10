@@ -265,7 +265,7 @@ const player = {
 		},
 	},
 	adjustBars() {
-		if (Math.abs(this.levels.health.height - this.levels.health.level) > 3) (this.levels.health.height > this.levels.health.level) ? this.levels.health.height -= 3 : this.levels.health.height += 3;
+		if (Math.abs(this.levels.health.height - this.levels.health.level) > 10) (this.levels.health.height > this.levels.health.level) ? this.levels.health.height -= 10 : this.levels.health.height += 10; /// / 4
 		if (Math.abs(this.levels.passive.height - this.levels.passive.level) > 1) (this.levels.passive.height > this.levels.passive.level) ? this.levels.passive.height -= 2 : this.levels.passive.height += 2; // because passive level only drops in high amounts
 		if (this.state === "normal") {
 			if (this.movement.vertical > 0 && this.movement.y < game.waterLine) {
@@ -455,6 +455,8 @@ const releaseCoor = (push) => player.movement.horizontal = 0;
 sprinkles.canvas.addEventListener('mousedown',pushCoor);
 sprinkles.canvas.addEventListener('mouseup',releaseCoor);
 
+const assignLoopability = (arr) => arr.forEach((sound) => sound.loop = true);
+
 window.addEventListener("load",function() {
 	game.sounds.normalTheme.src = "audio/normal/normal_theme.mp3",
 	game.sounds.slowTheme.src = "audio/slow/slow_theme.mp3",
@@ -467,10 +469,6 @@ window.addEventListener("load",function() {
 	game.sounds.power = [ new Audio('audio/power/D.mp3'), new Audio('audio/power/G.mp3'), new Audio('audio/power/DS.mp3'), new Audio('audio/power/C.mp3'), new Audio('audio/power/DS2.mp3'), new Audio('audio/power/G2.mp3'), new Audio('audio/power/D2.mp3'), new Audio('audio/power/AS.mp3') ];
 	game.sounds.slow = [ new Audio("audio/slow/D.mp3"), new Audio("audio/slow/G.mp3"), new Audio("audio/slow/D_2.mp3"), new Audio("audio/slow/C.mp3"), new Audio("audio/slow/D_2.mp3"), new Audio("audio/slow/G.mp3"), new Audio("audio/slow/D.mp3"), new Audio("audio/slow/A_.mp3") ];
 	assignLoopability([game.sounds.normalTheme, game.sounds.slowTheme, game.sounds.powerTheme, game.sounds.passiveTheme]);
+	sprinkles.canvas.style.opacity = 1;
 });
 
-function assignLoopability(arr) {
-	arr.forEach(function(sound) {
-		sound.loop = true;
-	});
-}
