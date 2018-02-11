@@ -58,7 +58,7 @@ body {
 }
 #menu {
   opacity: 0;
-  background-color: #FFF;
+  background-color: #F9F9F9;
   overflow-y: scroll;
   z-index: 0;
   grid-area: 3 / 2 / 5 / 4;
