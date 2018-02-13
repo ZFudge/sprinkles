@@ -22,33 +22,30 @@ body {
 }
 
 #sprinkle-container {
-  height: 740px;
-  width: 450px;
   display: grid;
-  grid-gap: 25px;
+  /*grid-gap: 25px;*/
   border-radius: 50px;
   background-color: #F9F9F9; /*#38b6ff DDD*/
   box-shadow: inset -3px -5px 13px 0 #00000066, inset 3px -5px 13px 0 #00000066, inset 0 8px 5px 0 #FFFFFF88, 0 4px 2px 0 rgba(0, 0, 0, 0.7);
-  grid-template-rows: 5px 50px 100px 425px 25px 5px;
-  grid-template-columns: 5px 250px 115px 5px;
+  grid-template-rows: 1em 3em 1.1em 6em 1.5em 25.5em 1.2em 1.5em 1.8em;
+  grid-template-columns: 1.5em 15em 1.5em 6.9em 1.5em;
 }
 
 #title {
-  grid-area: 2 / 2 / 3 / 4;
-  height: 50px;
-  width: 390px;
-  font-size: 40px;
+  grid-area: 2 / 2 / 3 / 5;
+  font-size: 38px;
   font-weight: bold;
 }
 
 #control-container {
-  grid-area: 5 / 2 / 6 / 4;
+  grid-area: 8 / 2 / 9 / 4;
   display: grid;
-  grid-template-columns: 115px 20px 115px 25px 65px 25px;
+  grid-template-columns: 6.8em 1.4em 6.8em 1.5em 3.8em 1.5em 1.5em;
 }
 
 #sprinkle-canvas {
-  grid-area: 3 / 2 / 5 / 3;
+  grid-area: 4 / 2 / 6 / 3;
+  width: 15em;
 }
 
 #sprinkle-canvas, #menu {
@@ -65,7 +62,7 @@ body {
 }
 
 #score-box {
-  grid-area: 3 / 3 / 4 / 4;
+  grid-area: 4 / 4 / 5 / 5;
   border-radius: 35px;
   color: #DDD;
   display: flex;
@@ -76,9 +73,10 @@ body {
 }
 
 #levels-canvas {
-  grid-area: 4 / 3 / 5 / 3;
+  grid-area: 6 / 4 / 6 / 5;
   border-radius: 35px;
   background-color: #111;
+  width: 6.9em;
 }
 
 #levels-canvas, #sprinkle-canvas, #score-box {
