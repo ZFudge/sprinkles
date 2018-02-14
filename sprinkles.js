@@ -35,10 +35,7 @@ const game = {
 				game.sounds.theme.muted = true;
 				this.sound.style.backgroundImage = "url('unmute.png')";
 			}
-			if (!game.on) {
-				game.pauseUnpause();
-				game.on = true;
-			}
+			if (!game.on) game.pauseUnpause();
 		}
 	},
 	drawSky() {
@@ -66,7 +63,6 @@ const game = {
 				document.getElementById('menu').style.opacity = 0;
 			}
 		} else {
-			this.on = true;
 			this.pauseUnpause();
 		}
 	},
@@ -77,7 +73,10 @@ const game = {
 			player.levels.canvas.style.opacity = 1;
 			document.getElementById('menu').style.opacity = 0;
 		}
-		this.on = true;
+		if (!this.on) {
+			this.on = true;
+			document.getElementById('welcome').style.display = 'none';
+		}
 		this.active = !this.active;
 		if (this.active) {
 			this.loop = setInterval(mainFunction,this.ms);
@@ -88,7 +87,10 @@ const game = {
 		}
 	},
 	reset() {
-		this.on = true;
+		if (!this.on) {
+			this.on = true;
+			document.getElementById('welcome').style.display = 'none';
+		}
 		if (!this.active) {
 			this.loop = setInterval(mainFunction,this.ms);
 			this.sounds.theme.play();
@@ -435,10 +437,7 @@ function pushedKey(btn) {// 90 z, 88 x, 67 c
 			setTimeout(() => player.setState("normal"), 4000);
 		}
 	}
-	if (!game.on) {
-		game.pauseUnpause();
-		game.on = true;
-	}
+	if (!game.on) game.pauseUnpause();
 }
 
 function releasedKey(btn) {
