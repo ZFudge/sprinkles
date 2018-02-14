@@ -44,8 +44,9 @@ body {
 }
 
 #sprinkle-canvas {
-  grid-area: 4 / 2 / 6 / 3;
+  grid-area: 4 / 2 / 7 / 3;
   width: 15em;
+  z-index: 1;
 }
 
 #sprinkle-canvas, #menu {
@@ -58,7 +59,7 @@ body {
   background-color: #F9F9F9;
   overflow-y: scroll;
   z-index: 0;
-  grid-area: 3 / 2 / 5 / 4;
+  grid-area: 4 / 2 / 7 / 5;
 }
 
 #score-box {
@@ -128,4 +129,15 @@ button:active {
   background-image: url("mute.png");
   outline: none;
   background-position: 35% 35%; 
+}
+
+#welcome {
+  color: #EEE;
+  font-size: 2em;
+  text-align: center;
+  grid-area: 4 / 2 / 7 / 3;
+  z-index: 2;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
