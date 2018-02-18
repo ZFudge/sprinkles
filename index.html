@@ -27,23 +27,42 @@
 			</div>
 			<div id="menu">
 				<div>
-					<h1>Controls</h1>
-					<p>Left/Right Array Keys:<br>Move horizontally</p>
-					<p>Up Arrow Key:<br>Move at max speed</p>
-					<p>Down Arrow Key:<br>Stop</p>
-					<p>A:<br>Pause / Resume game</p>
-					<p>S:<br>Slow mode on/off</p>
-					<p>D:<br>Power mode on/off</p>
-					<p>F:<br>Passive mode on/off</p>
+					<h4>Controls</h4>
+					<img src="images/sprinkles-keyboard.svg">
+					<div id="key-container">
+						<span>
+							<div>
+								<span style="font-weight:bold;">A:</span>
+								<span style="float:right; margin-left: 16px;">Pause</span>
+							</div>
+							<div>
+								<span style="font-weight:bold;">D:</span>
+								<span style="float:right; margin-left: 16px;">Power</span>
+							</div>
+							<div>
+								<span style="font-weight:bold;">Up:</span>
+								<span style="float:right; margin-left: 16px;">Max speed</span>
+							</div>
+						</span>
+						<span>
+							<div>
+								<span style="font-weight:bold;">S:</span>
+								<span style="float:right; margin-left: 16px;">Slow</span>
+							</div>
+							<div>
+								<span style="font-weight:bold;">F:</span>
+								<span style="float:right; margin-left: 16px;">Passive</span>
+							</div>
+							<div>
+								<span style="font-weight:bold;">Down:</span>
+								<span style="float:right; margin-left: 16px;">Stop</span>
+							</div>
+						</span>
+					</div>
 				</div>
 				<div>
-					<h1>Instructions</h1>
-					<p>Navigate to the dark zone. The player receives 1000 Points and 100 HP on each trip across. Colliding with a sprinkle takes 100 HP and pushes the player backwards. Sprinkles will only cause damage while colored. There is no functional difference between colors.</p>
-					<p>While moving upwards in the middle zone, the player accumulates points to use on three modes: Slow, Power, and Passive.</p>
-					<p>Slow: Game moves at half speed until turned off with "S" key, reaching the dark zone, or running out of Points.</p>
-					<p>Power: Player speed is doubled. Colliding with a sprinkle adds 10 HP and moves the player forward. Will turn off after hitting the "D" key, reaching the dark zone, or running out of Points.</p>
-					<p>Passive: Sprinkles will not hit the player for four seconds, even if reaching the dark zone.</p>
-					<p>Points are added to the first mode that is not at maximum level. If all three modes are at their maximum level, the frequency of falling sprinkles will slowly be reduced.</p>
+					<h4>Instructions</h4>
+					<p>Avoid sprinkles while navigating to the dark zone. Sprinkles will only cause damage while colored. There is no functional difference between colors. The player accumulates points while moving upwards in the middle zone that can be used on three modes: Slow, Power, and Passive. Points are added to the first mode that is not at maximum level. If all three modes are at their maximum level, the frequency of falling sprinkles will slowly be reduced.</p>
 				</div>
 			</div>
 			<p id='welcome'>Press any button to start.</p>

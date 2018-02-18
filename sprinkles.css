@@ -57,9 +57,8 @@ body {
 #menu {
   opacity: 0;
   background-color: #F9F9F9;
-  overflow-y: scroll;
   z-index: 0;
-  grid-area: 4 / 2 / 7 / 5;
+  grid-area: 3 / 2 / 7 / 5;
 }
 
 #score-box {
@@ -140,4 +139,19 @@ button:active {
   display: flex;
   justify-content: center;
   align-items: center;
+}
+
+#key-container {
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  text-align: left;
+}
+
+#keys {
+
+}
+
+h4 {
+  margin: 0.5em auto;
 }
