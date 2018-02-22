@@ -11,6 +11,7 @@
 
 <body>
 	<div id="outer-container">
+	<div id="nav-placeholder"></div>
 		<div id='sprinkle-container'>
 			<div id="title">S P R I N K L E S</div>
 			<canvas id='levels-canvas' height='425' width='116'></canvas>
@@ -69,5 +70,14 @@
 		</div>
 	</div>
 	<script src='sprinkles.js'></script>
+    <script>
+		document.getElementById('nav-placeholder').innerHTML = '<object type="text/html" data="../nav.html" ></object>';
+		window.addEventListener("keydown", function(e) {
+	    // space and arrow keys
+	    if([32, 37, 38, 39, 40].indexOf(e.keyCode) > -1) {
+	        e.preventDefault();
+	    }
+	}, false);
+	</script>
 </body>
 </html>

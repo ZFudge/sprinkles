@@ -14,16 +14,20 @@ body {
   font-family: 'Orbitron', sans-serif;
 }
 
-#outer-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
+
+#nav-placeholder object {
+  width: 100%;
+}
+#nav-placeholder {
+  width: 100%;
+  align-self: flex-end;
 }
 
 #sprinkle-container {
+  margin: 0 auto;
+  margin-bottom: 5em;
+  width: 26.25em;
   display: grid;
-  /*grid-gap: 25px;*/
   border-radius: 50px;
   background-color: #F9F9F9; /*#38b6ff DDD*/
   box-shadow: inset -3px -5px 13px 0 #00000066, inset 3px -5px 13px 0 #00000066, inset 0 8px 5px 0 #FFFFFF88, 0 4px 2px 0 rgba(0, 0, 0, 0.7);
