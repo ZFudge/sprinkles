@@ -14,7 +14,6 @@ body {
   font-family: 'Orbitron', sans-serif;
 }
 
-
 #nav-placeholder object {
   width: 100%;
 }
@@ -28,7 +27,6 @@ body {
   margin-bottom: 5em;
   width: 26.25em;
   display: grid;
-  border-radius: 50px;
   background-color: #F9F9F9; /*#38b6ff DDD*/
   box-shadow: inset -3px -5px 13px 0 #00000066, inset 3px -5px 13px 0 #00000066, inset 0 8px 5px 0 #FFFFFF88, 0 4px 2px 0 rgba(0, 0, 0, 0.7);
   grid-template-rows: 1em 3em 1.1em 6em 1.5em 25.5em 1.2em 1.5em 1.8em;
@@ -65,9 +63,12 @@ body {
   grid-area: 3 / 2 / 7 / 5;
 }
 
+#score-box, #levels-canvas, #sprinkle-container {
+  border-radius: 20px;
+
+}
 #score-box {
   grid-area: 4 / 4 / 5 / 5;
-  border-radius: 35px;
   color: #DDD;
   display: flex;
   flex-direction: column;
@@ -78,7 +79,6 @@ body {
 
 #levels-canvas {
   grid-area: 6 / 4 / 6 / 5;
-  border-radius: 35px;
   background-color: #111;
   width: 6.9em;
 }
@@ -130,7 +130,7 @@ button:active {
   border-top: 2px solid #ddd;
   border-right: 2px solid #898989;
   border-bottom: 2px solid #898989;  
-  background-image: url("mute.png");
+  background-image: url("images/mute.png");
   outline: none;
   background-position: 35% 35%; 
 }
