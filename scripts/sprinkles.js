@@ -1,7 +1,7 @@
 const game = {
-	on: false,
-	active: false,
 	ms: 30,
+	on: false,
+	paused: true,
 	sounds: {
 		notecounter: 0,
 		soundlooper() {
@@ -13,19 +13,19 @@ const game = {
 		soundImageToggle() {
 			if (game.sounds.theme.muted) {
 				game.sounds.theme.muted = false;
-				if (game.active) game.sounds.theme.play();
-				this.sound.style.backgroundImage = "url('mute.png')";
+				if (!game.paused) game.sounds.theme.play();
+				this.sound.style.backgroundImage = "url('images/mute.png')";
 			} else {
 				game.sounds.theme.muted = true;
-				this.sound.style.backgroundImage = "url('unmute.png')";
+				this.sound.style.backgroundImage = "url('images/unmute.png')";
 			}
 			if (!game.on) game.pauseUnpause();
 		}
 	},
 	instructions: document.getElementById('menu'),
-	showInstructions() {
+	toggleInstructions() {
 		if (this.on) {
-			if (this.active) this.pauseUnpause();
+			if (!this.paused) this.pauseUnpause();
 			sprinkles.canvas.style.opacity = Number(!Number(sprinkles.canvas.style.opacity));
 			player.score.style.opacity = Number(!Number(player.score.style.opacity));
 			canvas.levels.canvas.style.opacity = Number(!Number(canvas.levels.canvas.style.opacity));
@@ -43,8 +43,8 @@ const game = {
 	},
 	pauseUnpause() {
 		this.checkIfOn();
-		this.active = !this.active;
-		if (this.active) {
+		this.paused = !this.paused;
+		if (!this.paused) {
 			this.loop = setInterval(mainLoop, this.ms);
 			this.sounds.theme.play();
 		} else {
@@ -54,17 +54,17 @@ const game = {
 	},
 	reset() {
 		this.checkIfOn();
-		if (!this.active) {
+		if (this.paused) {
 			this.loop = setInterval(mainLoop,this.ms);
 			this.sounds.theme.play();
 			if (sprinkles.canvas.style.opacity === "0") {
 				sprinkles.canvas.style.opacity = 1;
 				player.score.style.opacity = 1;
 				canvas.levels.canvas.style.opacity = 1;
-				document.getElementById('menu').style.opacity = 0;
+				this.instructions.style.opacity = 0;
 			}
 		}
-		this.active = true;
+		this.paused = false;
 		this.sounds.theme.currentTime = 0;
 		sprinkles.drops = [];
 		sprinkles.speedRange = 1;
@@ -160,21 +160,19 @@ const canvas = {
 			}
 		},
 		draw(x, height, color) {
+			x = 2 + x * this.canvas.width;
+			const y = this.canvas.height;
+			const width = this.width;
+			height = -Math.round(height);
 			this.context.fillStyle = player.colors[color];
-			this.context.fillRect(
-				2 + x * this.canvas.width,
-				this.canvas.height, // - (this.levels.slow.level * 2),
-				this.width,
-				-Math.round(height)
-			);
+			this.context.fillRect(x, y, width, height);
 		},
 		clear(x, height, c='') {
-			this.context.clearRect(
-				2 + x * this.canvas.width,
-				0,
-				this.width,
-				this.canvas.height - height
-			);
+			x = 2 + x * this.canvas.width;
+			const y = 0;
+			const width = this.width;
+			height = this.canvas.height - height
+			this.context.clearRect(x, y, width, height);
 		},
 		max: 212.25,
 		increment: 0.16,
