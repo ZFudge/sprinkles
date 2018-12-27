@@ -35,14 +35,14 @@ const game = {
 		}
 	},
 	welcome: document.getElementById('welcome'),
-	onCheck() {
+	checkIfOn() {
 		if (!this.on) {
 			this.on = true;
 			this.welcome.style.display = 'none';
 		}
 	},
 	pauseUnpause() {
-		this.onCheck();
+		this.checkIfOn();
 		this.active = !this.active;
 		if (this.active) {
 			this.loop = setInterval(mainLoop, this.ms);
@@ -53,7 +53,7 @@ const game = {
 		}
 	},
 	reset() {
-		this.onCheck();
+		this.checkIfOn();
 		if (!this.active) {
 			this.loop = setInterval(mainLoop,this.ms);
 			this.sounds.theme.play();
@@ -92,35 +92,40 @@ game.buttons.sound = document.getElementById("sound");
 game.buttons.countrols = document.getElementById("show-controls");
 
 const canvas = {
-	waterShade: 40, // sets shade of blue
-	waterRise: true,
-	waterAdjust() {
-		this.waterShade += (this.waterRise) ? 1 : -1;
-		if (this.waterShade >= 88 || this.waterShade <= 40) this.waterRise = !this.waterRise;
+	water: {
+		shade: 40,
+		rise: true,
+		adjust() {
+			this.shade += (this.rise) ? 1 : -1;
+			if (this.shade >= 88 || this.shade <= 40) this.rise = !this.rise;
+		},
+		draw() {
+			const fillIt = '#0000'+ this.shade.toString();
+			sprinkles.context.fillStyle = fillIt;
+			sprinkles.context.fillRect(0, this.line, sprinkles.canvas.width, sprinkles.canvas.height);
+			this.adjust();
+		}
 	},
-	drawSky() {
-		sprinkles.context.fillStyle = player.colors[player.state];
-		sprinkles.context.fillRect(0, 
-			this.cloudLine,
-			sprinkles.canvas.width,
-			this.waterLine);
-	},
-	drawWater() {
-		const fillIt = '#0000'+ this.waterShade.toString();
-		sprinkles.context.fillStyle = fillIt;
-		sprinkles.context.fillRect(0, this.waterLine, sprinkles.canvas.width, sprinkles.canvas.height);
-		this.waterAdjust();
+	sky: {
+		line: 100,
+		draw() {
+			sprinkles.context.fillStyle = player.colors[player.state];
+			sprinkles.context.fillRect(0,
+				this.line,
+				sprinkles.canvas.width,
+				canvas.water.line);
+		}
 	},
 	levels: {
-		adjustBars() {
+		adjust() {
 			if (Math.abs(this.health.height - this.health.level) >= this.health.barIncrement) {
 				this.health.height = (this.health.height > this.health.level) ? -this.health.barIncrement : this.health.barIncrement;
 			}
 			if (Math.abs(this.passive.height - this.passive.level) >= 1) {
-				this.passive.height = (this.passive.height > this.passive.level) ? -1 : 1; 
+				this.passive.height = (this.passive.height > this.passive.level) ? -1 : 1;
 			}
 			if (player.state === "normal") {
-				if (player.positionMovement.vertical > 0 && player.positionMovement.y < canvas.waterLine) {
+				if (player.positionMovement.vertical > 0 && player.positionMovement.y < canvas.water.line) {
 					if (this.slow.level < this.max) {
 						this.slow.level = this.increment;
 					} else if (this.power.level < this.max) {
@@ -154,7 +159,7 @@ const canvas = {
 				}
 			}
 		},
-		barDraw(x, height, color) {
+		draw(x, height, color) {
 			this.context.fillStyle = player.colors[color];
 			this.context.fillRect(
 				2 + x * this.canvas.width,
@@ -163,10 +168,10 @@ const canvas = {
 				-Math.round(height)
 			);
 		},
-		barClear(x, height, c='') {
+		clear(x, height, c='') {
 			this.context.clearRect(
 				2 + x * this.canvas.width,
-				0, 
+				0,
 				this.width,
 				this.canvas.height - height
 			);
@@ -182,7 +187,7 @@ const canvas = {
 			},
 			set level(increment){
 				this._level += increment;
-				canvas.levels[increment > 0 ? "barDraw" : "barClear"](0.25, this._level * 2, "green");
+				canvas.levels[increment > 0 ? "draw" : "clear"](0.25, this._level * 2, "green");
 			}
 		},
 		power:  {
@@ -193,7 +198,7 @@ const canvas = {
 			},
 			set level(increment){
 				this._level += increment;
-				canvas.levels[increment > 0 ? "barDraw" : "barClear"](0.5, this._level * 2, "blue");
+				canvas.levels[increment > 0 ? "draw" : "clear"](0.5, this._level * 2, "blue");
 			}
 		},
 		passive:  {
@@ -204,11 +209,11 @@ const canvas = {
 			},
 			set height(increment) {
 				this._height += increment;
-				canvas.levels[increment > 0 ? "barDraw" : "barClear"](0.75, this._height, "magenta");
+				canvas.levels[increment > 0 ? "draw" : "clear"](0.75, this._height, "magenta");
 			}
 		},
 		health:  {
-			level: 100,		
+			level: 100,
 			_height: 0,
 			barIncrement: 25,
 			increment: 100,
@@ -222,37 +227,37 @@ const canvas = {
 			drawLayers(height, increment, n = 0, max = 1700) {
 				canvas.levels.context.fillStyle = player.colors.red[n];
 				if (height <= max && increment === 'negative' && n === 0) {
-					canvas.levels.barClear(0, height / 4);
+					canvas.levels.clear(0, height / 4);
 				} else if (height <= max) {
 					canvas.levels.context.fillRect(
-						2, 
+						2,
 						canvas.levels.canvas.height - height / 4,
 						canvas.levels.width,
 						canvas.levels.canvas.height - (Math.abs(canvas.levels.canvas.height - height / 4))
 					);
 				} else {
 					canvas.levels.context.fillRect(
-						2, 
-						canvas.levels.canvas.height - max / 4, 
-						canvas.levels.width, 
+						2,
+						canvas.levels.canvas.height - max / 4,
+						canvas.levels.width,
 						canvas.levels.canvas.height - (Math.abs(canvas.levels.canvas.height - max / 4))
 					);
 					if (max >= 75) this.drawLayers(height - max, increment, n + 1, max - 75);
 				}
 			}
-		},
+		}
 	}
 }
 
 function mainLoop() {
 	sprinkles.context.clearRect(0, 0, sprinkles.canvas.width, sprinkles.canvas.height);
-	canvas.drawSky();
-	canvas.drawWater();
+	canvas.sky.draw();
+	canvas.water.draw();
 	sprinkles.adjust_sprinkles();
 	if (player.alive) {
 		sprinkles.dripCheck();
 		player.safeCheck();
-		canvas.levels.adjustBars();
+		canvas.levels.adjust();
 		player.updateStats();
 	}
 	player.adjust();
@@ -277,18 +282,18 @@ Sprinkle.prototype.adjust = function() {
 		const index = sprinkles.drops.indexOf(this);
 		sprinkles.removalIndexes.push(index);
 	}
-	if (this.y + this.height < canvas.cloudLine) {
+	if (this.y + this.height < canvas.sky.line) {
 		sprinkles.context.fillStyle = 'white';
-		(!player.alive) ? this.speed += this.trueSpeed * 0.25 : 
-			(this.y + this.height - this.speed <= 0) ? 
+		(!player.alive) ? this.speed += this.trueSpeed * 0.25 :
+			(this.y + this.height - this.speed <= 0) ?
 				this.speed = this.trueSpeed * 1.5 : null;
-	} else if (this.y + this.height < canvas.waterLine) {
+	} else if (this.y + this.height < canvas.water.line) {
 		sprinkles.context.fillStyle =  this.color;
-		this.speed -= (!player.alive && this.y > canvas.cloudLine) ?	this.trueSpeed * 0.25 :
+		this.speed -= (!player.alive && this.y > canvas.sky.line) ?	this.trueSpeed * 0.25 :
 			(this.speed > this.trueSpeed) ? this.speed * 0.1 : 0;
 	} else {
 		sprinkles.context.fillStyle = 'black';
-		this.speed -= (!player.alive) ? this.trueSpeed * 0.1 : 
+		this.speed -= (!player.alive) ? this.trueSpeed * 0.1 :
 			(this.speed > 0.5) ? this.speed * 0.025 : 0;
 	}
 	sprinkles.context.fillRect(this.x, this.y, this.width, this.height);
@@ -296,7 +301,7 @@ Sprinkle.prototype.adjust = function() {
 
 const sprinkles = {
 	drops: [],
-	speedRange: 1, // range of  possible speed 
+	speedRange: 1, // range of  possible speed
 	dripFrequency: 0.07, //max of 2.5
 	playerImpact: () => Math.ceil(Math.random() * 20 + 5),
 	dripCheck: function() {
@@ -311,9 +316,9 @@ const sprinkles = {
 	},
 	passiveCheck: function(drop) {
 		const passiveGap = 50;
-		return (drop.y < player.positionMovement.y + player.size 
-			&& drop.x < player.positionMovement.x + player.size + passiveGap 
-			&& drop.x + drop.width > player.positionMovement.x - passiveGap 
+		return (drop.y < player.positionMovement.y + player.size
+			&& drop.x < player.positionMovement.x + player.size + passiveGap
+			&& drop.x + drop.width > player.positionMovement.x - passiveGap
 			&& drop.y > player.positionMovement.y - 100);
 	},
 	removalIndexes: [],
@@ -332,8 +337,7 @@ const sprinkles = {
 sprinkles.canvas = document.getElementById('sprinkle-canvas');
 sprinkles.context = sprinkles.canvas.getContext('2d');
 sprinkles.colors = colors.sprinkles;
-canvas.cloudLine = 100;
-canvas.waterLine = sprinkles.canvas.height - 100;
+canvas.water.line = sprinkles.canvas.height - 100;
 
 const player = {
 	alive: true,
@@ -392,8 +396,8 @@ const player = {
 				canvas.levels.health.level += 5;
 				this.points += 10;
 			}
-			if (this.positionMovement.horizontal < 0 && player.positionMovement.x < 1 
-					|| this.positionMovement.horizontal > 0 
+			if (this.positionMovement.horizontal < 0 && player.positionMovement.x < 1
+					|| this.positionMovement.horizontal > 0
 					&& this.positionMovement.x > sprinkles.canvas.width - this.size) {
 				this.positionMovement.horizontal = 0;
 			}
@@ -405,7 +409,7 @@ const player = {
 		this.draw();
 	},
 	safeCheck() {
-		if (this.positionMovement.y + this.size < canvas.cloudLine) this.levelup();
+		if (this.positionMovement.y + this.size < canvas.sky.line) this.levelup();
 	},
 	collision(drop) {
 		if (this.alive) {
@@ -417,19 +421,19 @@ const player = {
 			const playDwn = this.positionMovement.y + this.size;
 			const playLft = this.positionMovement.x
 			const playRgt = this.positionMovement.x + this.size;
-			if (((playDwn >= dropUp && playDwn <= dropDwn 
-						&& playLft >= dropLft && playLft <= dropRgt) 
-					|| (playDwn >= dropUp && playDwn <= dropDwn 
-						&& playRgt >= dropLft && playRgt <= dropRgt) 
-					|| (playUp >= dropUp && playUp <= dropDwn 
-						&& playLft >= dropLft && playLft <= dropRgt) 
+			if (((playDwn >= dropUp && playDwn <= dropDwn
+						&& playLft >= dropLft && playLft <= dropRgt)
+					|| (playDwn >= dropUp && playDwn <= dropDwn
+						&& playRgt >= dropLft && playRgt <= dropRgt)
+					|| (playUp >= dropUp && playUp <= dropDwn
+						&& playLft >= dropLft && playLft <= dropRgt)
 					|| (dropDwn >= playUp && dropDwn <= playDwn
 						&& dropLft >= playLft && dropLft <= playRgt)
 					|| (dropDwn >= playUp && dropDwn <= playDwn
-						&& dropRgt >= playLft && dropRgt <= playRgt) 
-					|| (dropUp >= playUp && dropUp <= playDwn 
-						&& dropLft >= playLft && dropLft <= playRgt)) 
-					&& dropDwn < canvas.waterLine && dropDwn > canvas.cloudLine) {
+						&& dropRgt >= playLft && dropRgt <= playRgt)
+					|| (dropUp >= playUp && dropUp <= playDwn
+						&& dropLft >= playLft && dropLft <= playRgt))
+					&& dropDwn < canvas.water.line && dropDwn > canvas.sky.line) {
 				game.sounds.soundlooper();
 				if (this.state === "power" || this.state === "passive") {
 					if (this.state === "power") canvas.levels.power.level = -5;
