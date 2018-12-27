@@ -84,6 +84,7 @@ body {
 }
 
 #levels-canvas, #sprinkle-canvas, #score-box {
+  transition-duration: 0.25s;
   box-shadow: -3px -5px 13px 0 #00000066,
     3px -5px 13px 0 #00000066,
     0 5px 10px 0 #CCCCCCCC;

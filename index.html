@@ -29,7 +29,7 @@
 			<canvas id='sprinkle-canvas' height='550' width='250'></canvas>
 			<div id="control-container">
 				<button id="pause" onclick="game.pauseUnpause()">Pause</button>
-				<button id="show-controls" onclick="game.showControls()">Controls</button>
+				<button id="show-controls" onclick="game.showInstructions()">Controls</button>
 				<button id="reset" onclick="game.reset()">Reset</button>
 				<button id="sound" onclick="game.buttons.soundImageToggle()"></button>
 			</div>
@@ -78,6 +78,7 @@
 	</div>
 	<script src='colors.js'></script>
 	<script src='sprinkles.js'></script>
+	<script src='input.js'></script>
     <script>
 		document.getElementById('nav-placeholder').innerHTML = '<object type="text/html" data="../nav.html" ></object>';
 		window.addEventListener("keydown", function(e) {
