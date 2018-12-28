@@ -109,7 +109,7 @@ const canvas = {
 	sky: {
 		line: 100,
 		draw() {
-			sprinkles.context.fillStyle = player.colors[player.state];
+			sprinkles.context.fillStyle = canvas.colors[player.state];
 			sprinkles.context.fillRect(0,
 				this.line,
 				sprinkles.canvas.width,
@@ -164,7 +164,7 @@ const canvas = {
 			const y = this.canvas.height;
 			const width = this.width;
 			height = -Math.round(height);
-			this.context.fillStyle = player.colors[color];
+			this.context.fillStyle = canvas.colors[color];
 			this.context.fillRect(x, y, width, height);
 		},
 		clear(x, height, c='') {
@@ -223,43 +223,21 @@ const canvas = {
 				this.drawLayers(this._height, increment > 0 ? 'positive' : 'negative');
 			},
 			drawLayers(height, increment, n = 0, max = 1700) {
-				canvas.levels.context.fillStyle = player.colors.red[n];
 				if (height <= max && increment === 'negative' && n === 0) {
 					canvas.levels.clear(0, height / 4);
-				} else if (height <= max) {
-					canvas.levels.context.fillRect(
-						2,
-						canvas.levels.canvas.height - height / 4,
-						canvas.levels.width,
-						canvas.levels.canvas.height - (Math.abs(canvas.levels.canvas.height - height / 4))
-					);
 				} else {
-					canvas.levels.context.fillRect(
-						2,
-						canvas.levels.canvas.height - max / 4,
-						canvas.levels.width,
-						canvas.levels.canvas.height - (Math.abs(canvas.levels.canvas.height - max / 4))
-					);
-					if (max >= 75) this.drawLayers(height - max, increment, n + 1, max - 75);
+					const y = (height <= max) ? height / -4 : max / -4; // negative fill
+					const color = canvas.colors.red[n];
+					canvas.levels.draw(0, -y, color)
+					if (max >= 75 && height <= max) this.drawLayers(height - max, increment, n + 1, max - 75);
 				}
 			}
 		}
 	}
 }
-
-function mainLoop() {
-	sprinkles.context.clearRect(0, 0, sprinkles.canvas.width, sprinkles.canvas.height);
-	canvas.sky.draw();
-	canvas.water.draw();
-	sprinkles.adjust_sprinkles();
-	if (player.alive) {
-		sprinkles.dripCheck();
-		player.safeCheck();
-		canvas.levels.adjust();
-		player.updateStats();
-	}
-	player.adjust();
-}
+canvas.colors = colors.canvas;
+canvas.levels.canvas = document.getElementById("levels-canvas");
+canvas.levels.context = canvas.levels.canvas.getContext("2d");
 
 function Sprinkle(width, height, color, speed) {
 	this.width = width + Math.floor(Math.random() * width);
@@ -271,14 +249,33 @@ function Sprinkle(width, height, color, speed) {
 	this.trueSpeed = speed;
 }
 
+Sprinkle.prototype.proximityCheck = function() {
+	const size = player.size;
+	const passiveGap = 50;
+	const position = player.positionMovement;
+	return (this.y < position.y + size
+		&& this.x < position.x + size + passiveGap
+		&& this.x + this.width > position.x - passiveGap
+		&& this.y > position.y - 100);
+}
+
+Sprinkle.prototype.passiveMovement = function() {
+	if (player.state === "passive") {
+		if (this.proximityCheck()) {
+			const sprinkleX = this.x + this.width / 2;
+			const playerX = player.positionMovement.x + player.size / 2;
+			this.x += (sprinkleX > playerX) ? 2 : -2;
+		}
+	}
+}
+
 Sprinkle.prototype.adjust = function() {
 	this.y += this.speed;
-	if (player.state === "passive")
-		if (sprinkles.passiveCheck(this))
-			this.x += (this.x > player.positionMovement.x + player.size/2) ? 2 : -2;
+	this.passiveMovement();
 	if (this.y >= sprinkles.canvas.height || player.collision(this)) {
 		const index = sprinkles.drops.indexOf(this);
-		sprinkles.removalIndexes.push(index);
+		sprinkles.drops.splice(index, 1); // sprinkles.drops.splice(index) to remove all sprinkles behind 
+		return;
 	}
 	if (this.y + this.height < canvas.sky.line) {
 		sprinkles.context.fillStyle = 'white';
@@ -291,8 +288,9 @@ Sprinkle.prototype.adjust = function() {
 			(this.speed > this.trueSpeed) ? this.speed * 0.1 : 0;
 	} else {
 		sprinkles.context.fillStyle = 'black';
-		this.speed -= (!player.alive) ? this.trueSpeed * 0.1 :
-			(this.speed > 0.5) ? this.speed * 0.025 : 0;
+		this.speed -= (!player.alive) ? this.trueSpeed * 0.1
+		: (this.speed > 0.5) ? this.speed * 0.025
+			: 0;
 	}
 	sprinkles.context.fillRect(this.x, this.y, this.width, this.height);
 }
@@ -312,7 +310,7 @@ const sprinkles = {
 		const color = sprinkles.colors[Math.floor(Math.random() * sprinkles.colors.length)];
 		sprinkles.drops.push(new Sprinkle(widthRange, heightRange, color, speedRange));
 	},
-	passiveCheck: function(drop) {
+	proximityCheck: function(drop) {
 		const passiveGap = 50;
 		return (drop.y < player.positionMovement.y + player.size
 			&& drop.x < player.positionMovement.x + player.size + passiveGap
@@ -321,7 +319,10 @@ const sprinkles = {
 	},
 	removalIndexes: [],
 	adjust_sprinkles: function() {
-		this.removalIndexes = [];
+		for (let i = sprinkles.drops.length - 1; i >= 0; i--) {
+			sprinkles.drops[i].adjust();
+		}
+		/*
 		for (let drop in sprinkles.drops) {
 			sprinkles.drops[drop].adjust()
 		}
@@ -330,6 +331,7 @@ const sprinkles = {
 	    } else if (this.removalIndexes.length == 1) {
 	      	sprinkles.drops.splice(this.removalIndexes[0], 1);
 	    }
+	    */
 	}
 }
 sprinkles.canvas = document.getElementById('sprinkle-canvas');
@@ -476,10 +478,7 @@ const player = {
 	}
 }
 
-player.colors = colors.player;
 player.score = document.getElementById("score-box");
-canvas.levels.canvas = document.getElementById("levels-canvas");
-canvas.levels.context = canvas.levels.canvas.getContext("2d");
 player.img.image.src = 'images/player.png';
 player.draw = function() {
 	sprinkles.context.drawImage(player.img.image,
@@ -493,4 +492,18 @@ player.draw = function() {
 		player.size * 2
 	);
 	player.img.adjust();
+}
+
+function mainLoop() {
+	sprinkles.context.clearRect(0, 0, sprinkles.canvas.width, sprinkles.canvas.height);
+	canvas.sky.draw();
+	canvas.water.draw();
+	sprinkles.adjust_sprinkles();
+	if (player.alive) {
+		sprinkles.dripCheck();
+		player.safeCheck();
+		canvas.levels.adjust();
+		player.updateStats();
+	}
+	player.adjust();
 }

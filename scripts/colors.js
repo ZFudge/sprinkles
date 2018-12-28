@@ -1,5 +1,5 @@
 const colors = {
-	player: {
+	canvas: {
 		magenta: '#AE00FF',
 		blue: '#0BF',
 		green: '#0F2',
