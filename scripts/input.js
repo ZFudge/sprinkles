@@ -113,6 +113,10 @@ window.addEventListener("load", function() {
 	canvas.levels.canvas.style.opacity = 1;
 	game.instructions.style.opacity = 0;
 
+	player.points = 0;
+	canvas.levels.health.level = 0;
+	sprinkles.targetSprinkle();
+
 	canvas.levels.health.level = 8000;
 	canvas.levels.slow.level = 100;
 	canvas.levels.power.level = 100;

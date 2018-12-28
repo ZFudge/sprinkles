@@ -67,15 +67,16 @@ const game = {
 		this.paused = false;
 		this.sounds.theme.currentTime = 0;
 		sprinkles.drops = [];
+		sprinkles.targetSprinkle();
 		sprinkles.speedRange = 1;
 		sprinkles.dripFrequency = 0.07;
-		canvas.levels.health.level = 100;
-		canvas.levels.health.height = -(canvas.levels.health.level - 100);
+		canvas.levels.health.level = -(canvas.levels.health.level - 100);
+		canvas.levels.health.height = -(canvas.levels.health.height - 100);
 		canvas.levels.slow.level = -canvas.levels.slow.level;
 		canvas.levels.power.level = -canvas.levels.power.level;
 		canvas.levels.passive.level = 0;
 		player.alive = true;
-		player.points = 0;
+		player.points = -player.points;
 		player.positionMovement.x = (sprinkles.canvas.width / 2) - 5;
 		player.positionMovement.y = sprinkles.canvas.height * 0.92;
 		player.positionMovement.horizontal = 0;
@@ -110,16 +111,13 @@ const canvas = {
 		line: 100,
 		draw() {
 			sprinkles.context.fillStyle = canvas.colors[player.state];
-			sprinkles.context.fillRect(0,
-				this.line,
-				sprinkles.canvas.width,
-				canvas.water.line);
+			sprinkles.context.fillRect(0, this.line, sprinkles.canvas.width, canvas.water.line);
 		}
 	},
 	levels: {
 		adjust() {
-			if (Math.abs(this.health.height - this.health.level) >= this.health.barIncrement) {
-				this.health.height = (this.health.height > this.health.level) ? -this.health.barIncrement : this.health.barIncrement;
+			if (Math.abs(this.health.height - this.health.level) >= this.health.heightIncrement) {
+				this.health.height = (this.health.height > this.health.level) ? -this.health.heightIncrement : this.health.heightIncrement;
 			}
 			if (Math.abs(this.passive.height - this.passive.level) >= 1) {
 				this.passive.height = (this.passive.height > this.passive.level) ? -1 : 1;
@@ -164,7 +162,7 @@ const canvas = {
 			const y = this.canvas.height;
 			const width = this.width;
 			height = -Math.round(height);
-			this.context.fillStyle = canvas.colors[color];
+			this.context.fillStyle = color;
 			this.context.fillRect(x, y, width, height);
 		},
 		clear(x, height, c='') {
@@ -174,7 +172,6 @@ const canvas = {
 			height = this.canvas.height - height
 			this.context.clearRect(x, y, width, height);
 		},
-		max: 212.25,
 		increment: 0.16,
 		width: 25,
 		slow: {
@@ -185,7 +182,8 @@ const canvas = {
 			},
 			set level(increment){
 				this._level += increment;
-				canvas.levels[increment > 0 ? "draw" : "clear"](0.25, this._level * 2, "green");
+				const color = canvas.colors["green"];
+				canvas.levels[increment > 0 ? "draw" : "clear"](0.25, this._level * 2, color);
 			}
 		},
 		power:  {
@@ -196,7 +194,8 @@ const canvas = {
 			},
 			set level(increment){
 				this._level += increment;
-				canvas.levels[increment > 0 ? "draw" : "clear"](0.5, this._level * 2, "blue");
+				const color = canvas.colors["blue"];
+				canvas.levels[increment > 0 ? "draw" : "clear"](0.5, this._level * 2, color);
 			}
 		},
 		passive:  {
@@ -207,29 +206,39 @@ const canvas = {
 			},
 			set height(increment) {
 				this._height += increment;
-				canvas.levels[increment > 0 ? "draw" : "clear"](0.75, this._height, "magenta");
+				const color = canvas.colors["magenta"];
+				canvas.levels[increment > 0 ? "draw" : "clear"](0.75, this._height, color);
 			}
 		},
 		health:  {
-			level: 100,
-			_height: 0,
-			barIncrement: 25,
+			heightIncrement: 25,
 			increment: 100,
+			_level: 100,
+			get level() {
+				return this._level;
+			},
+			set level(increment) {
+				this._level += increment;
+				player.score.children[1].innerHTML = `H : ${this.level.toFixed(0)}`;
+			},
+			_height: 0,
 			get height() {
 				return this._height;
 			},
 			set height(increment) {
 				this._height += increment;
-				this.drawLayers(this._height, increment > 0 ? 'positive' : 'negative');
+				this.layers(this._height, increment > 0 ? 'positive' : 'negative');
 			},
-			drawLayers(height, increment, n = 0, max = 1700) {
-				if (height <= max && increment === 'negative' && n === 0) {
+			layers(height, increment, n = 0, max = 1700) {
+				if (increment === 'negative' && n === 0 && height <= max) {
 					canvas.levels.clear(0, height / 4);
 				} else {
-					const y = (height <= max) ? height / -4 : max / -4; // negative fill
+					const y = (height < max) ? height / -4 : max / -4; // negative fill
 					const color = canvas.colors.red[n];
 					canvas.levels.draw(0, -y, color)
-					if (max >= 75 && height <= max) this.drawLayers(height - max, increment, n + 1, max - 75);
+					if (max >= 75 && height >= max) {
+						this.layers(height - max, increment, n + 1, max - 75);
+					}
 				}
 			}
 		}
@@ -238,11 +247,12 @@ const canvas = {
 canvas.colors = colors.canvas;
 canvas.levels.canvas = document.getElementById("levels-canvas");
 canvas.levels.context = canvas.levels.canvas.getContext("2d");
+canvas.levels.max = canvas.levels.canvas.height / 2;
 
-function Sprinkle(width, height, color, speed) {
+function Sprinkle(width, height, x, color, speed) {
 	this.width = width + Math.floor(Math.random() * width);
 	this.height = height + Math.floor(Math.random() * height);
-	this.x = Math.floor(Math.random() * sprinkles.canvas.width - this.width);;
+	this.x = x;;
 	this.y = -this.height;
 	this.color = color;
 	this.speed = speed + Math.floor(Math.random() * sprinkles.speedRange);
@@ -269,69 +279,133 @@ Sprinkle.prototype.passiveMovement = function() {
 	}
 }
 
+Sprinkle.prototype.checkRemoval = function() {
+	if (this.y >= sprinkles.canvas.height || this.collisionCheck()) {
+		const index = sprinkles.drops.indexOf(this);
+		sprinkles.drops.splice(index, 1); // sprinkles.drops.splice(index) to remove all sprinkles behind 
+		return true;
+	}
+	return false;
+}
+
+Sprinkle.prototype.colorAndSpeed = function() {
+	const topOfSprinkle = this.y + this.height;
+	let color;
+	if (topOfSprinkle < canvas.sky.line) {
+		color = 'white';
+		if (!player.alive) {
+			this.speed += this.trueSpeed * 0.25;
+		} else if (topOfSprinkle - this.speed <= 0) {
+			this.speed = this.trueSpeed * 1.5;
+		}
+	} else if (topOfSprinkle < canvas.water.line) {
+		color =  this.color;
+		if (!player.alive && this.y > canvas.sky.line) {
+			this.speed -= this.trueSpeed * 0.25;
+		} else if (this.speed > this.trueSpeed) {
+			this.speed -= this.speed * 0.1;
+		}
+	} else {
+		color = 'black';
+		if (!player.alive) {
+			this.speed -= this.trueSpeed * 0.1;
+		} else if (this.speed > 0.5) {
+			this.speed -= this.speed * 0.025;
+		}
+	}
+	sprinkles.context.fillStyle = color;
+}
+
+Sprinkle.prototype.collided = function(top, bottom, left, right, playTop, playBottom, playLeft, playRight) {
+	return ((playBottom >= top && playBottom <= bottom
+		&& playLeft >= left && playLeft <= right)
+	|| (playBottom >= top && playBottom <= bottom
+		&& playRight >= left && playRight <= right)
+	|| (playTop >= top && playTop <= bottom
+		&& playLeft >= left && playLeft <= right)
+	|| (bottom >= playTop && bottom <= playBottom
+		&& left >= playLeft && left <= playRight)
+	|| (bottom >= playTop && bottom <= playBottom
+		&& right >= playLeft && right <= playRight)
+	|| (top >= playTop && top <= playBottom
+		&& left >= playLeft && left <= playRight))
+	&& bottom < canvas.water.line && bottom > canvas.sky.line;
+}
+
+Sprinkle.prototype.collisionCheck = function() {
+	if (player.alive) {
+		const top = this.y;
+		const bottom = this.y + this.height;
+		const left = this.x;
+		const right = this.x + this.width;
+		const playerTop = player.positionMovement.y;
+		const playerBottom = player.positionMovement.y + player.size;
+		const playerLeft = player.positionMovement.x
+		const playerRight = player.positionMovement.x + player.size;
+		if (this.collided(top, bottom, left, right, playerTop, playerBottom, playerLeft, playerRight)) {
+			game.sounds.soundlooper();
+			if (player.state === "power" || player.state === "passive") {
+				if (player.state === "power") canvas.levels.power.level = -5;
+				canvas.levels.health.level = (player.state === "power") ? 10 : 100;
+				player.points = 200;
+				player.positionMovement.y -= Math.ceil(Math.random() * 5 + 5);
+			} else {
+				canvas.levels.health.level = -canvas.levels.health.increment;
+				if (canvas.levels.health.level < 0) {
+					canvas.levels.health.level = -canvas.levels.health.level;
+					player.alive = false;
+					player.score.children[1].innerHTML = "You Died";
+					if (player.state === "slow" || player.state === "passive") player.state = "normal";
+					return false;
+				} else {
+					player.positionMovement.y += sprinkles.playerImpact();
+				}
+			}
+			return true;
+		}
+	}
+	return false;
+}
+
 Sprinkle.prototype.adjust = function() {
 	this.y += this.speed;
 	this.passiveMovement();
-	if (this.y >= sprinkles.canvas.height || player.collision(this)) {
-		const index = sprinkles.drops.indexOf(this);
-		sprinkles.drops.splice(index, 1); // sprinkles.drops.splice(index) to remove all sprinkles behind 
-		return;
+	const removed = this.checkRemoval();
+	if (!removed) {
+		this.colorAndSpeed();
+		sprinkles.context.fillRect(this.x, this.y, this.width, this.height);
 	}
-	if (this.y + this.height < canvas.sky.line) {
-		sprinkles.context.fillStyle = 'white';
-		(!player.alive) ? this.speed += this.trueSpeed * 0.25 :
-			(this.y + this.height - this.speed <= 0) ?
-				this.speed = this.trueSpeed * 1.5 : null;
-	} else if (this.y + this.height < canvas.water.line) {
-		sprinkles.context.fillStyle =  this.color;
-		this.speed -= (!player.alive && this.y > canvas.sky.line) ?	this.trueSpeed * 0.25 :
-			(this.speed > this.trueSpeed) ? this.speed * 0.1 : 0;
-	} else {
-		sprinkles.context.fillStyle = 'black';
-		this.speed -= (!player.alive) ? this.trueSpeed * 0.1
-		: (this.speed > 0.5) ? this.speed * 0.025
-			: 0;
-	}
-	sprinkles.context.fillRect(this.x, this.y, this.width, this.height);
 }
 
 const sprinkles = {
 	drops: [],
 	speedRange: 1, // range of  possible speed
 	dripFrequency: 0.07, //max of 2.5
-	playerImpact: () => Math.ceil(Math.random() * 20 + 5),
-	dripCheck: function() {
+	playerImpact: () => Math.ceil(Math.random() * 15 + 10),
+	dripCheck() {
 		if (Math.random() < this.dripFrequency) this.drip();
 	},
-	drip: function() {
+	drip() {
 		const widthRange = 5;
 		const heightRange = 10;
-		const speedRange = 1;
+		const x = Math.floor(Math.random() * sprinkles.canvas.width - widthRange);
+		const speed = Math.ceil(Math.random() * (this.speedRange * 2)) / 2;
 		const color = sprinkles.colors[Math.floor(Math.random() * sprinkles.colors.length)];
-		sprinkles.drops.push(new Sprinkle(widthRange, heightRange, color, speedRange));
+		sprinkles.drops.push(new Sprinkle(widthRange, heightRange, x, color, speed));
 	},
-	proximityCheck: function(drop) {
-		const passiveGap = 50;
-		return (drop.y < player.positionMovement.y + player.size
-			&& drop.x < player.positionMovement.x + player.size + passiveGap
-			&& drop.x + drop.width > player.positionMovement.x - passiveGap
-			&& drop.y > player.positionMovement.y - 100);
-	},
-	removalIndexes: [],
-	adjust_sprinkles: function() {
+	adjustSprinkles() {
+		// backwards iteration to allow index removal 
 		for (let i = sprinkles.drops.length - 1; i >= 0; i--) {
 			sprinkles.drops[i].adjust();
 		}
-		/*
-		for (let drop in sprinkles.drops) {
-			sprinkles.drops[drop].adjust()
-		}
-		if (this.removalIndexes.length > 1) {
-	      	for (let i = 0; i < this.removalIndexes.length; i++) sprinkles.drops.splice(this.removalIndexes[0], 1);
-	    } else if (this.removalIndexes.length == 1) {
-	      	sprinkles.drops.splice(this.removalIndexes[0], 1);
-	    }
-	    */
+	},
+	targetSprinkle() {
+		const widthRange = 5;
+		const heightRange = 10;
+		const x = sprinkles.canvas.width / 2 - widthRange;
+		const speed = Math.ceil(Math.random() * (this.speedRange * 2)) / 2;
+		const color = sprinkles.colors[Math.floor(Math.random() * sprinkles.colors.length)];
+		sprinkles.drops.push(new Sprinkle(widthRange, heightRange, x, color, speed));
 	}
 }
 sprinkles.canvas = document.getElementById('sprinkle-canvas');
@@ -342,7 +416,14 @@ canvas.water.line = sprinkles.canvas.height - 100;
 const player = {
 	alive: true,
 	size: 10,
-	points: 0,
+	_points: 0,
+	get points() {
+		return this._points;
+	},
+	set points(increment) {
+		this._points += increment;
+		this.score.children[0].innerHTML = `P : ${this.points}`;
+	},
 	positionMovement: {
 		x: (sprinkles.canvas.width / 2) - 5,
 		y: sprinkles.canvas.height * 0.92,
@@ -372,9 +453,9 @@ const player = {
 				if (!mute) game.sounds.theme.play();
 			}
 	},
-	levelup() {
-		canvas.levels.health.level += canvas.levels.health.increment;
-		this.points += 1000;
+	levelUp() {
+		canvas.levels.health.level = canvas.levels.health.increment;
+		this.points = 1000;
 		this.positionMovement.y = sprinkles.canvas.height * 0.92;
 		if (this.state != "normal" && player.state != "passive") {
 			if (this.state === "power") {
@@ -390,11 +471,11 @@ const player = {
 	adjust() {
 		if (this.alive) {
 			if (this.state === "power") {
-				canvas.levels.health.level += 1;
-				this.points += 5;
+				canvas.levels.health.level = 1;
+				this.points = 5;
 			} else if (this.state === "passive") {
-				canvas.levels.health.level += 5;
-				this.points += 10;
+				canvas.levels.health.level = 5;
+				this.points = 10;
 			}
 			if (this.positionMovement.horizontal < 0 && player.positionMovement.x < 1
 					|| this.positionMovement.horizontal > 0
@@ -409,72 +490,22 @@ const player = {
 		this.draw();
 	},
 	safeCheck() {
-		if (this.positionMovement.y + this.size < canvas.sky.line) this.levelup();
-	},
-	collision(drop) {
-		if (this.alive) {
-			const dropUp = drop.y;
-			const dropDwn = drop.y + drop.height;
-			const dropLft = drop.x;
-			const dropRgt = drop.x + drop.width;
-			const playUp = this.positionMovement.y;
-			const playDwn = this.positionMovement.y + this.size;
-			const playLft = this.positionMovement.x
-			const playRgt = this.positionMovement.x + this.size;
-			if (((playDwn >= dropUp && playDwn <= dropDwn
-						&& playLft >= dropLft && playLft <= dropRgt)
-					|| (playDwn >= dropUp && playDwn <= dropDwn
-						&& playRgt >= dropLft && playRgt <= dropRgt)
-					|| (playUp >= dropUp && playUp <= dropDwn
-						&& playLft >= dropLft && playLft <= dropRgt)
-					|| (dropDwn >= playUp && dropDwn <= playDwn
-						&& dropLft >= playLft && dropLft <= playRgt)
-					|| (dropDwn >= playUp && dropDwn <= playDwn
-						&& dropRgt >= playLft && dropRgt <= playRgt)
-					|| (dropUp >= playUp && dropUp <= playDwn
-						&& dropLft >= playLft && dropLft <= playRgt))
-					&& dropDwn < canvas.water.line && dropDwn > canvas.sky.line) {
-				game.sounds.soundlooper();
-				if (this.state === "power" || this.state === "passive") {
-					if (this.state === "power") canvas.levels.power.level = -5;
-					canvas.levels.health.level += (this.state === "power") ? 10 : 100;
-					this.points += 200;
-					this.positionMovement.y -= Math.ceil(Math.random() * 5 + 5);
-				} else {
-					canvas.levels.health.level -= canvas.levels.health.increment;
-					if (canvas.levels.health.level < 0) {
-						canvas.levels.health.level = 0;
-						this.alive = false;
-						this.score.children[1].innerHTML = "You Died";
-						if (this.state === "slow" || this.state === "passive") this.state = "normal";
-						return false;
-					} else {
-						this.positionMovement.y += sprinkles.playerImpact();
-					}
-				}
-				return true;
-			}
-		}
-		return false;
+		if (this.positionMovement.y + this.size < canvas.sky.line) this.levelUp();
 	},
 	img: {
 		x: 0,
 		steps: 0,
 		image: new Image(),
-		adjust: function() {
-			player.img.steps++;
-			if (player.img.steps == 10) {
-				player.img.x += player.img.steps;
-				if (player.img.x == 80) {
-					player.img.x = 0;
+		adjustSprite: function() {
+			this.steps++;
+			if (this.steps == 10) {
+				this.x += this.steps;
+				if (this.x == 80) {
+					this.x = 0;
 				}
-				player.img.steps = 0;
+				this.steps = 0;
 			}
 		}
-	},
-	updateStats() {
-		this.score.children[0].innerHTML = `PTS : ${this.points}`;
-		this.score.children[1].innerHTML = `HP : ${canvas.levels.health.level.toFixed(0)}`;
 	}
 }
 
@@ -491,19 +522,18 @@ player.draw = function() {
 		player.size,
 		player.size * 2
 	);
-	player.img.adjust();
+	player.img.adjustSprite();
 }
 
 function mainLoop() {
 	sprinkles.context.clearRect(0, 0, sprinkles.canvas.width, sprinkles.canvas.height);
 	canvas.sky.draw();
 	canvas.water.draw();
-	sprinkles.adjust_sprinkles();
+	sprinkles.adjustSprinkles();
 	if (player.alive) {
 		sprinkles.dripCheck();
 		player.safeCheck();
 		canvas.levels.adjust();
-		player.updateStats();
 	}
 	player.adjust();
 }
