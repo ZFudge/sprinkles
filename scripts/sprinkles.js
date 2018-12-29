@@ -11,12 +11,13 @@ const game = {
 	},
 	buttons: {
 		soundImageToggle() {
-			if (game.sounds.theme.muted) {
-				game.sounds.theme.muted = false;
-				if (!game.paused) game.sounds.theme.play();
+			const theme = game.sounds.theme;
+			if (theme.muted) {
+				theme.muted = false;
+				if (!game.paused) theme.play();
 				this.sound.style.backgroundImage = "url('images/mute.png')";
 			} else {
-				game.sounds.theme.muted = true;
+				theme.muted = true;
 				this.sound.style.backgroundImage = "url('images/unmute.png')";
 			}
 			if (!game.on) game.pauseUnpause();
@@ -70,18 +71,21 @@ const game = {
 		sprinkles.targetSprinkle();
 		sprinkles.speedRange = 1;
 		sprinkles.dripFrequency = 0.07;
-		canvas.levels.health.level = -(canvas.levels.health.level - 100);
-		canvas.levels.health.height = -(canvas.levels.health.height - 100);
-		canvas.levels.slow.level = -canvas.levels.slow.level;
-		canvas.levels.power.level = -canvas.levels.power.level;
-		canvas.levels.passive.level = 0;
+		const cl = canvas.levels;
+		cl.health.level = -(cl.health.level - 100);
+		cl.health.height = -cl.health.height;
+		cl.slow.level = -cl.slow.level;
+		cl.power.level = -cl.power.level;
+		cl.passive.level = 0;
+		cl.passive.height = -cl.canvas.height;
 		player.alive = true;
 		player.points = -player.points;
-		player.positionMovement.x = (sprinkles.canvas.width / 2) - 5;
-		player.positionMovement.y = sprinkles.canvas.height * 0.92;
-		player.positionMovement.horizontal = 0;
-		player.positionMovement.vertical = 1;
-		player.positionMovement.speed = 3;
+		const ppM = player.positionMovement;
+		ppM.x = (sprinkles.canvas.width / 2) - 5;
+		ppM.y = sprinkles.canvas.height * 0.92;
+		ppM.horizontal = 0;
+		ppM.vertical = 1;
+		ppM.speed = 3;
 	},
 	setSpeed(ms) {
 		clearInterval(this.loop);
@@ -94,11 +98,11 @@ game.buttons.countrols = document.getElementById("show-controls");
 
 const canvas = {
 	water: {
-		shade: 40,
+		shade: 60,
 		rise: true,
 		adjust() {
 			this.shade += (this.rise) ? 1 : -1;
-			if (this.shade >= 88 || this.shade <= 40) this.rise = !this.rise;
+			if (this.shade === 99 || this.shade === 60) this.rise = !this.rise;
 		},
 		draw() {
 			const fillIt = '#0000'+ this.shade.toString();
@@ -317,19 +321,24 @@ Sprinkle.prototype.colorAndSpeed = function() {
 }
 
 Sprinkle.prototype.collided = function(top, bottom, left, right, playTop, playBottom, playLeft, playRight) {
-	return ((playBottom >= top && playBottom <= bottom
-		&& playLeft >= left && playLeft <= right)
-	|| (playBottom >= top && playBottom <= bottom
-		&& playRight >= left && playRight <= right)
-	|| (playTop >= top && playTop <= bottom
-		&& playLeft >= left && playLeft <= right)
-	|| (bottom >= playTop && bottom <= playBottom
-		&& left >= playLeft && left <= playRight)
-	|| (bottom >= playTop && bottom <= playBottom
-		&& right >= playLeft && right <= playRight)
-	|| (top >= playTop && top <= playBottom
-		&& left >= playLeft && left <= playRight))
-	&& bottom < canvas.water.line && bottom > canvas.sky.line;
+	// canvas y axis ascends downwards from zero 
+	return (
+		bottom < canvas.water.line && bottom > canvas.sky.line
+		&& (
+			(playBottom >= top && playBottom <= bottom
+				&& playLeft >= left && playLeft <= right) ||
+			(playBottom >= top && playBottom <= bottom
+				&& playRight >= left && playRight <= right) ||
+			(playTop >= top && playTop <= bottom
+				&& playLeft >= left && playLeft <= right) ||
+			(bottom >= playTop && bottom <= playBottom
+				&& left >= playLeft && left <= playRight) ||
+			(bottom >= playTop && bottom <= playBottom
+				&& right >= playLeft && right <= playRight) ||
+			(top >= playTop && top <= playBottom
+				&& left >= playLeft && left <= playRight)
+		)
+	);
 }
 
 Sprinkle.prototype.collisionCheck = function() {
